@@ -228,4 +228,12 @@ namespace no_install
             return var2edit;
         }
     }
+
+    class Background
+    {
+        public static void Test(string[] arguments)
+        {
+            MessageBox.Show(arguments[0]);
+        }
+    }
 }
