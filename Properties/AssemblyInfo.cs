@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("No Install")]
-[assembly: AssemblyDescription("wvzxn")]
+[assembly: AssemblyTitle("NO INSTALL (by wvzxn)")]
+[assembly: AssemblyDescription("NO INSTALL (by wvzxn)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("wvzxn")]
-[assembly: AssemblyProduct("No Install")]
+[assembly: AssemblyCompany("NO INSTALL (by wvzxn)")]
+[assembly: AssemblyProduct("NO INSTALL (by wvzxn)")]
 [assembly: AssemblyCopyright("Attribution 4.0 International (CC BY 4.0)")]
-[assembly: AssemblyTrademark("wvzxn")]
+[assembly: AssemblyTrademark("NO INSTALL (by wvzxn)")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible

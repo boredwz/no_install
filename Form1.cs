@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using JR.Utils.GUI.Forms;
 
 namespace no_install
 {
@@ -12,13 +14,18 @@ namespace no_install
         {
             InitializeComponent();
         }
-
         private void Form1_Load(object sender, EventArgs e)
         {
+            ControlCenter(textBoxDirectory);
+            ControlCenter(textBoxRegex);
             comboBoxFile.Text = comboBoxFile.Items[0].ToString();
             comboBoxDir.Text = comboBoxDir.Items[0].ToString();
         }
-
+        private void Form1_SizeChanged(object sender, EventArgs e)
+        {
+            ControlCenter(textBoxDirectory);
+            ControlCenter(textBoxRegex);
+        }
         private void panelRList_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             if (e.Column == 0)
@@ -28,7 +35,6 @@ namespace no_install
                 panelRList.Sort();
             }
         }
-
         private void buttonSelectDir_Click(object sender, EventArgs e)
         {
             using (var dir = new FolderBrowserDialog())
@@ -37,7 +43,6 @@ namespace no_install
                 if (result == DialogResult.OK) { textBoxDirectory.Text = dir.SelectedPath.ToString(); }
             }
         }
-
         private void buttonRegexSearch_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
@@ -82,12 +87,10 @@ namespace no_install
                 }
             }
         }
-
         private void buttonRemove_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem i in panelRList.SelectedItems) { panelRList.Items.Remove(i); }
         }
-
         private void buttonAddFiles_Click(object sender, EventArgs e)
         {
             var dir = new OpenFileDialog
@@ -100,33 +103,83 @@ namespace no_install
             {
                 foreach (string i in dir.FileNames)
                 {
-                    var lvi = new ListViewItem(i);
+                    if (!i.Contains(textBoxDirectory.Text)) { MessageBox.Show($"The item must be inside the folder\n'{textBoxDirectory.Text}'",i); break; }
+                    string j = i.Substring(textBoxDirectory.Text.Length + 1);
+                    var lvi = new ListViewItem(j);
                     lvi.SubItems.Add(comboBoxFile.Text);
                     panelRList.Items.Add(lvi);
                 }
             }
         }
-
         private void buttonAddFolder_Click(object sender, EventArgs e)
         {
             using (var dir = new FolderBrowserDialog())
             {
                 DialogResult result = dir.ShowDialog();
                 if (result == DialogResult.OK)
-                    panelRList.Items.Add(dir.SelectedPath.ToString()).SubItems.Add(comboBoxDir.Text);
+                {
+                    string i = dir.SelectedPath.ToString();
+                    if (!i.Contains(textBoxDirectory.Text)) { MessageBox.Show($"The item must be inside the folder\n'{textBoxDirectory.Text}'", i); return; }
+                    i = i.Substring(textBoxDirectory.Text.Length + 1);
+                    panelRList.Items.Add(i).SubItems.Add(comboBoxDir.Text);
+                }
             }
         }
-
         private void buttonCreateInstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
             CreateCmd(textBoxDirectory.Text + @"\SymLink Installer.cmd", GetCmdList(true));
         }
-
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
             CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false));
+        }
+        private void buttonCreate2Reg_Click(object sender, EventArgs e)
+        {
+            if (textBoxDirectory.Text == "") { return; }
+            CreateRegUninstall($"{textBoxDirectory.Text}\\1.reg", $"{textBoxDirectory.Text}\\2.reg");
+        }
+        private void buttonSandboxie_Click(object sender, EventArgs e)
+        {
+            string currentDir = textBoxDirectory.Text;
+            if (currentDir == "") { return; }
+
+            string envSystemDrive = Environment.GetEnvironmentVariable("SYSTEMDRIVE") + @"\";
+            string envUserName = Environment.GetEnvironmentVariable("USERNAME");
+            string Sandboxie = Path.Combine(envSystemDrive, "Sandbox", envUserName, "DefaultBox");
+            string SandboxieC = Path.Combine(Sandboxie, @"drive\C");
+            string SandboxieData = Path.Combine(Sandboxie, @"user\all");
+            string SandboxieUser = Path.Combine(Sandboxie, @"user\current");
+
+            CopyDirectory(SandboxieC, Path.Combine(currentDir, @"C"), true);
+            CopyDirectory(SandboxieData, Path.Combine(currentDir, @"C\ProgramData"), true);
+            CopyDirectory(SandboxieUser, Path.Combine(currentDir, @"C\Users\(Name)"), true);
+        }
+        private void buttonRemoveJunk_Click(object sender, EventArgs e)
+        {
+            string currentDir = textBoxDirectory.Text;
+            string regex = textBoxRegex.Text;
+            if (currentDir == "") { return; }
+            if (regex == "") { return; }
+
+            string regexJunk1 = @"(?:microsoft\\windows\\start menu\\(.+?$))";
+            string regexJunk2 = @"(?:users\\.+?\\desktop\\(.+?$))";
+            string regexJunk3 = @"(?:program (?:files|data)\\.+?\\(unins.*?\.|.+?\.ico))";
+            string regexJunk = regexJunk1 + @"|" + regexJunk2 + @"|" + regexJunk3;
+
+            Regex regexMatch = new Regex(regex, RegexOptions.IgnoreCase);
+            Regex regexJunkMatch = new Regex(regexJunk, RegexOptions.IgnoreCase);
+
+            var files = Directory.EnumerateFiles(Path.Combine(currentDir, @"C"), @"*", SearchOption.AllDirectories);
+            //string str = "";
+            foreach (string file in files)
+            {
+                string i = file.Substring(currentDir.Length + 1);
+                if (regexJunkMatch.IsMatch(i) || !regexMatch.IsMatch(i)) { File.Delete(file); }
+            }
+            DeleteEmptyDirs(currentDir);
+            //FlexibleMessageBox.Show(str);
         }
 
         private List<string> GetCmdList (bool installer)
@@ -163,7 +216,6 @@ namespace no_install
             if (!installer) { list.AddRange(list2); }
             return list;
         }
-
         private void CreateCmd(string filePath, List<string> commands)
         {
             string folderName = Path.GetFileName(Path.GetDirectoryName(filePath));
@@ -176,16 +228,16 @@ namespace no_install
             var text = new List<string>
             {
                 $"::        Generated {DateTime.Now:yyyy/MM/dd HH:mm:ss} | https://github.com/wvzxn/no_install | v{ProductVersion.Substring(0, 3)}",
-                "@echo off",
+                @"@echo off",
                 "cd /d \"%~dp0\"",
-                "fsutil dirty query %SYSTEMDRIVE% >nul",
-                "if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
-                "echo #############################################",
+                @"fsutil dirty query %SYSTEMDRIVE% >nul",
+                @"if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
+                @"echo #############################################",
                 $"echo {titlePad}{title}",
-                "echo #############################################",
+                @"echo #############################################",
                 $"echo {folderNamePad}{folderName}",
-                "echo #############################################",
-                "pause & echo:"
+                @"echo #############################################",
+                @"pause & echo:"
             };
             text.AddRange(commands);
             text.Add("echo: & pause");
@@ -198,7 +250,6 @@ namespace no_install
                 }
             }
         }
-
         private string EditEnv(string var2edit)
         {
             var replace1list = new List<string>
@@ -227,6 +278,87 @@ namespace no_install
             }
             return var2edit;
         }
+        private void CreateRegUninstall(string sourcePath, string destinationPath)
+        {
+            List<string> lines2write = new List<string>();
+            string[] lines = File.ReadAllLines(sourcePath);
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("[")) { lines2write.Add(line.Replace("[", "[-")); }
+                if (line.StartsWith("windows registry editor", true, null) ||
+                    line.StartsWith("regedit", true, null)) { lines2write.Add(line); lines2write.Add(""); }
+                if (line.StartsWith(";")) { lines2write.Add(line); }
+            }
+            File.WriteAllLines(destinationPath,lines2write);
+        }
+        private void ControlCenter(Control item)
+        {
+            int pad = ((item.Parent.Height / 2) - item.Height) / 2;
+            item.Margin = new Padding(item.Margin.Left, pad, item.Margin.Right, pad);
+        }
+        static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        {
+            // Get information about the source directory
+            var dir = new DirectoryInfo(sourceDir);
+
+            // Check if the source directory exists
+            if (!dir.Exists)
+                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+            // Cache directories before we start copying
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            // Create the destination directory
+            Directory.CreateDirectory(destinationDir);
+
+            // Get the files in the source directory and copy to the destination directory
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                string targetFilePath = Path.Combine(destinationDir, file.Name);
+                file.CopyTo(targetFilePath);
+            }
+
+            // If recursive and copying subdirectories, recursively call this method
+            if (recursive)
+            {
+                foreach (DirectoryInfo subDir in dirs)
+                {
+                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                    CopyDirectory(subDir.FullName, newDestinationDir, true);
+                }
+            }
+        }
+        static void DeleteEmptyDirs(string dir)
+        {
+            if (String.IsNullOrEmpty(dir))
+            {
+                throw new ArgumentException(
+                    "Starting directory is a null reference or an empty string",
+                    "dir");
+            }
+
+            try
+            {
+                foreach (var d in Directory.EnumerateDirectories(dir))
+                {
+                    DeleteEmptyDirs(d);
+                }
+
+                var entries = Directory.EnumerateFileSystemEntries(dir);
+
+                if (!entries.Any())
+                {
+                    try
+                    {
+                        Directory.Delete(dir);
+                    }
+                    catch (UnauthorizedAccessException) { }
+                    catch (DirectoryNotFoundException) { }
+                }
+            }
+            catch (UnauthorizedAccessException) { }
+        }
+
     }
 
     class Background
