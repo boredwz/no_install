@@ -165,7 +165,7 @@ namespace no_install
 
             string regexJunk1 = @"(?:microsoft\\windows\\start menu\\(.+?$))";
             string regexJunk2 = @"(?:users\\.+?\\desktop\\(.+?$))";
-            string regexJunk3 = @"(?:program (?:files|data)\\.+?\\(unins.*?\.|.+?\.ico))";
+            string regexJunk3 = @"(?:program.?(?:files(?:.?\(x86\))?|data))\\.+?\\(unins.*?\.|.+?\.ico)";
             string regexJunk = regexJunk1 + @"|" + regexJunk2 + @"|" + regexJunk3;
 
             Regex regexMatch = new Regex(regex, RegexOptions.IgnoreCase);
@@ -188,7 +188,7 @@ namespace no_install
             string itemPath;
             string parentPath;
             string parentName;
-            string mdPattern = @"program files|common files|programdata|roaming|documents|%.+?%";
+            string mdPattern = @"program files|common files|programdata|roaming|documents|\%[^\%]+?\%";
             var list = new List<string>();
             var list2 = new List<string>();
             var mdDuplicateList = new List<string>();
@@ -222,25 +222,29 @@ namespace no_install
             string title = Path.GetFileNameWithoutExtension(filePath);
             string folderNamePad = null;
             string titlePad = null;
-            for (int i = 0; i < ((45 - folderName.Length) / 2); i++) { folderNamePad += " "; }
-            for (int i = 0; i < ((45 - title.Length) / 2); i++) { titlePad += " "; }
+            for (int i = 0; i < ((60 - folderName.Length) / 2); i++) { folderNamePad += " "; }
+            for (int i = 0; i < ((60 - title.Length) / 2); i++) { titlePad += " "; }
 
             var text = new List<string>
             {
-                $"::        Generated {DateTime.Now:yyyy/MM/dd HH:mm:ss} | https://github.com/wvzxn/no_install | v{ProductVersion.Substring(0, 3)}",
+                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
+                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                @"",
                 @"@echo off",
                 "cd /d \"%~dp0\"",
                 @"fsutil dirty query %SYSTEMDRIVE% >nul",
                 @"if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
-                @"echo #############################################",
+                @"echo ############################################################",
                 $"echo {titlePad}{title}",
-                @"echo #############################################",
+                @"echo ############################################################",
                 $"echo {folderNamePad}{folderName}",
-                @"echo #############################################",
-                @"pause & echo:"
+                @"echo ############################################################",
+                @"pause & echo:",
+                @""
             };
             text.AddRange(commands);
-            text.Add("echo: & pause");
+            text.Add(@"");
+            text.Add(@"echo: & pause");
 
             using (StreamWriter file = new StreamWriter(filePath, false))
             {
@@ -358,7 +362,6 @@ namespace no_install
             }
             catch (UnauthorizedAccessException) { }
         }
-
     }
 
     class Background
