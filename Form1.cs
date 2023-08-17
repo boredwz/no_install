@@ -128,12 +128,14 @@ namespace no_install
         private void buttonCreateInstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
-            CreateCmd(textBoxDirectory.Text + @"\SymLink Installer.cmd", GetCmdList(true));
+            bool reg = File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"));
+            CreateCmd(textBoxDirectory.Text + @"\SymLink Installer.cmd", GetCmdList(true, reg));
         }
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
-            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false));
+            bool reg = File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"));
+            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, reg));
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
@@ -182,7 +184,7 @@ namespace no_install
             //FlexibleMessageBox.Show(str);
         }
 
-        private List<string> GetCmdList (bool installer)
+        private List<string> GetCmdList (bool installer, bool reg)
         {
             string par;
             string itemPath;
@@ -214,6 +216,11 @@ namespace no_install
                 else { list.Add($"{par} \"{itemPath}\" && echo Deleted: {itemPath}"); }
             }
             if (!installer) { list.AddRange(list2); }
+            if (reg)
+            {
+                string regName = installer ? @"1" : @"2";
+                list.Add($"regedit /s {regName}.reg");
+            }
             return list;
         }
         private void CreateCmd(string filePath, List<string> commands)
