@@ -47,7 +47,7 @@ namespace no_install
         {
             if (textBoxDirectory.Text == "") { return; }
             panelRList.Items.Clear();
-            string regexDefault = @"vst3|vstplugins|program files|common files|programdata|roaming|documents";
+            string regexDefault = @"vst3|vstplugins|(?:program(?: files(?: \(x86\))?|data))|common files|roaming|documents";
             string regex = textBoxRegex.Text;
 
             foreach (string itemFullPath in Directory.EnumerateDirectories(textBoxDirectory.Text, "*", SearchOption.AllDirectories))
@@ -167,7 +167,7 @@ namespace no_install
 
             string regexJunk1 = @"(?:microsoft\\windows\\start menu\\(.+?$))";
             string regexJunk2 = @"(?:users\\.+?\\desktop\\(.+?$))";
-            string regexJunk3 = @"(?:program.?(?:files(?:.?\(x86\))?|data))\\.+?\\(unins.*?\.|.+?\.ico)";
+            string regexJunk3 = @"(?:program(?: files(?: \(x86\))?|data))\\.+?\\(unins.*?\.|.+?\.ico)";
             string regexJunk = regexJunk1 + @"|" + regexJunk2 + @"|" + regexJunk3;
 
             Regex regexMatch = new Regex(regex, RegexOptions.IgnoreCase);
@@ -225,12 +225,12 @@ namespace no_install
         }
         private void CreateCmd(string filePath, List<string> commands)
         {
-            string folderName = Path.GetFileName(Path.GetDirectoryName(filePath));
-            string title = Path.GetFileNameWithoutExtension(filePath);
-            string folderNamePad = null;
-            string titlePad = null;
-            for (int i = 0; i < ((60 - folderName.Length) / 2); i++) { folderNamePad += " "; }
-            for (int i = 0; i < ((60 - title.Length) / 2); i++) { titlePad += " "; }
+            string dirPath = Path.GetDirectoryName(filePath);
+            string dirName = Path.GetFileName(dirPath);
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string dirNamePad = "", fileNamePad = "";
+            for (int i = 0; i < ((60 - dirName.Length) / 2); i++) { dirNamePad += " "; }
+            for (int i = 0; i < ((60 - fileName.Length) / 2); i++) { fileNamePad += " "; }
 
             var text = new List<string>
             {
@@ -242,9 +242,9 @@ namespace no_install
                 @"fsutil dirty query %SYSTEMDRIVE% >nul",
                 @"if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
                 @"echo ############################################################",
-                $"echo {titlePad}{title}",
+                $"echo {fileNamePad}{fileName}",
                 @"echo ############################################################",
-                $"echo {folderNamePad}{folderName}",
+                $"echo {dirNamePad}{dirName}",
                 @"echo ############################################################",
                 @"pause & echo:",
                 @""
@@ -253,12 +253,11 @@ namespace no_install
             text.Add(@"");
             text.Add(@"echo: & pause");
 
-            using (StreamWriter file = new StreamWriter(filePath, false))
+            if (File.Exists(filePath)) { File.Move(filePath, filePath + @".BAK"); }
+
+            using (var file = new StreamWriter(filePath, false))
             {
-                foreach (var i in text)
-                {
-                    file.WriteLine(i);
-                }
+                foreach (var line in text) { file.WriteLine(line); }
             }
         }
         private string EditEnv(string var2edit)
@@ -293,6 +292,7 @@ namespace no_install
         {
             List<string> lines2write = new List<string>();
             string[] lines = File.ReadAllLines(sourcePath);
+
             foreach (string line in lines)
             {
                 if (line.StartsWith("[")) { lines2write.Add(line.Replace("[", "[-")); }
@@ -300,7 +300,13 @@ namespace no_install
                     line.StartsWith("regedit", true, null)) { lines2write.Add(line); lines2write.Add(""); }
                 if (line.StartsWith(";")) { lines2write.Add(line); }
             }
-            File.WriteAllLines(destinationPath,lines2write);
+
+            if (File.Exists(destinationPath)) { File.Move(destinationPath, destinationPath + @".BAK"); }
+
+            using (var file = new StreamWriter(destinationPath, false))
+            {
+                foreach (var line in lines2write) { file.WriteLine(line); }
+            }
         }
         private void ControlCenter(Control item)
         {
