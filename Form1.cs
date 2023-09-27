@@ -163,7 +163,7 @@ namespace no_install
             string currentDir = textBoxDirectory.Text;
             string regex = textBoxRegex.Text;
             if (currentDir == "") { return; }
-            if (regex == "") { return; }
+            //if (regex == "") { return; }
 
             string regexJunk1 = @"(?:microsoft\\windows\\start menu\\(.+?$))";
             string regexJunk2 = @"(?:users\\.+?\\desktop\\(.+?$))";
@@ -184,7 +184,169 @@ namespace no_install
             //FlexibleMessageBox.Show(str);
         }
 
-        private List<string> GetCmdList (bool installer, bool reg)
+
+        // File creation, editing and deleting
+        private void CreateBackupFile(string filePath)
+        {
+            string backupPath = filePath + @".BAK";
+
+            if (File.Exists(filePath))
+            {
+                if (File.Exists(backupPath)) { File.Delete(backupPath); }
+                File.Move(filePath, backupPath);
+            }
+        }
+        private void CreateCmd(string filePath, List<string> commands)
+        {
+            string dirPath = Path.GetDirectoryName(filePath);
+            string dirName = Path.GetFileName(dirPath);
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string dirNamePad = "", fileNamePad = "";
+            for (int i = 0; i < ((60 - dirName.Length) / 2); i++) { dirNamePad += " "; }
+            for (int i = 0; i < ((60 - fileName.Length) / 2); i++) { fileNamePad += " "; }
+
+            var text = new List<string>
+            {
+                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
+                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                @"",
+                @"@echo off",
+                "cd /d \"%~dp0\"",
+                @"fsutil dirty query %SYSTEMDRIVE% >nul",
+                @"if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
+                $"title {fileName}",
+                @"echo ############################################################",
+                $"echo {fileNamePad}{fileName}",
+                @"echo ############################################################",
+                $"echo {dirNamePad}{dirName}",
+                @"echo ############################################################",
+                @"pause & echo:",
+                @""
+            };
+            text.AddRange(commands);
+            text.Add(@"");
+            text.Add(@"echo: & pause");
+
+            CreateBackupFile(filePath);
+
+            using (var file = new StreamWriter(filePath, false))
+            {
+                foreach (var line in text) { file.WriteLine(line); }
+            }
+        }
+        private void CreateRegUninstall(string sourcePath, string destinationPath)
+        {
+            List<string> lines2write = new List<string>();
+            string[] lines = File.ReadAllLines(sourcePath);
+
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("[")) { lines2write.Add(line.Replace("[", "[-")); }
+                if (line.StartsWith("windows registry editor", true, null) ||
+                    line.StartsWith("regedit", true, null)) { lines2write.Add(line); lines2write.Add(""); }
+                if (line.StartsWith(";")) { lines2write.Add(line); }
+            }
+
+            CreateBackupFile(destinationPath);
+
+            using (var file = new StreamWriter(destinationPath, false))
+            {
+                foreach (var line in lines2write) { file.WriteLine(line); }
+            }
+        }
+        private void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        {
+            // Get information about the source directory
+            var dir = new DirectoryInfo(sourceDir);
+
+            // Check if the source directory exists
+            if (!dir.Exists)
+                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+            // Cache directories before we start copying
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            // Create the destination directory
+            Directory.CreateDirectory(destinationDir);
+
+            // Get the files in the source directory and copy to the destination directory
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                string targetFilePath = Path.Combine(destinationDir, file.Name);
+                file.CopyTo(targetFilePath);
+            }
+
+            // If recursive and copying subdirectories, recursively call this method
+            if (recursive)
+            {
+                foreach (DirectoryInfo subDir in dirs)
+                {
+                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                    CopyDirectory(subDir.FullName, newDestinationDir, true);
+                }
+            }
+        }
+        private void DeleteEmptyDirs(string dir)
+        {
+            if (String.IsNullOrEmpty(dir))
+            {
+                throw new ArgumentException(
+                    "Starting directory is a null reference or an empty string",
+                    "dir");
+            }
+
+            try
+            {
+                foreach (var d in Directory.EnumerateDirectories(dir))
+                {
+                    DeleteEmptyDirs(d);
+                }
+
+                var entries = Directory.EnumerateFileSystemEntries(dir);
+
+                if (!entries.Any())
+                {
+                    try
+                    {
+                        Directory.Delete(dir);
+                    }
+                    catch (UnauthorizedAccessException) { }
+                    catch (DirectoryNotFoundException) { }
+                }
+            }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        // String editing
+        private string EditEnv(string var2edit) // Ex. '..\appdata\roaming' --> '%APPDATA%'
+        {
+            var replace1list = new List<string>
+            {
+                @"^(c)",
+                @"^(.+?appdata\\roaming)",
+                @"^(.+?appdata\\local)",
+                @"^(.*?users\\\(name\))",
+                @"^(.*?common files)",
+                @"^(.*?program files)",
+                @"^(.*?programdata)"
+            };
+            var replace2list = new List<string>
+            {
+                @"%SYSTEMDRIVE%",
+                @"%APPDATA%",
+                @"%LOCALAPPDATA%",
+                @"%USERPROFILE%",
+                @"%COMMONPROGRAMFILES%",
+                @"%PROGRAMFILES%",
+                @"%PROGRAMDATA%"
+            };
+            for (int i = 0; i < replace1list.Count; i++)
+            {
+                var2edit = Regex.Replace(var2edit, replace1list[i], replace2list[i], RegexOptions.IgnoreCase);
+            }
+            return var2edit;
+        }
+        private List<string> GetCmdList (bool installer, bool reg) // mklink, md, regedit
         {
             string par;
             string itemPath;
@@ -219,161 +381,17 @@ namespace no_install
             if (reg)
             {
                 string regName = installer ? @"1" : @"2";
+                list.Add(@"");
                 list.Add($"regedit /s {regName}.reg");
             }
             return list;
         }
-        private void CreateCmd(string filePath, List<string> commands)
-        {
-            string dirPath = Path.GetDirectoryName(filePath);
-            string dirName = Path.GetFileName(dirPath);
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
-            string dirNamePad = "", fileNamePad = "";
-            for (int i = 0; i < ((60 - dirName.Length) / 2); i++) { dirNamePad += " "; }
-            for (int i = 0; i < ((60 - fileName.Length) / 2); i++) { fileNamePad += " "; }
 
-            var text = new List<string>
-            {
-                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
-                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                @"",
-                @"@echo off",
-                "cd /d \"%~dp0\"",
-                @"fsutil dirty query %SYSTEMDRIVE% >nul",
-                @"if ERRORLEVEL 1 (echo Run as Administrator required & pause & exit)",
-                @"echo ############################################################",
-                $"echo {fileNamePad}{fileName}",
-                @"echo ############################################################",
-                $"echo {dirNamePad}{dirName}",
-                @"echo ############################################################",
-                @"pause & echo:",
-                @""
-            };
-            text.AddRange(commands);
-            text.Add(@"");
-            text.Add(@"echo: & pause");
-
-            if (File.Exists(filePath)) { File.Move(filePath, filePath + @".BAK"); }
-
-            using (var file = new StreamWriter(filePath, false))
-            {
-                foreach (var line in text) { file.WriteLine(line); }
-            }
-        }
-        private string EditEnv(string var2edit)
-        {
-            var replace1list = new List<string>
-            {
-                @"^(c)",
-                @"^(.+?appdata\\roaming)",
-                @"^(.+?appdata\\local)",
-                @"^(.*?users\\\(name\))",
-                @"^(.*?common files)",
-                @"^(.*?program files)",
-                @"^(.*?programdata)"
-            };
-            var replace2list = new List<string>
-            {
-                @"%SYSTEMDRIVE%",
-                @"%APPDATA%",
-                @"%LOCALAPPDATA%",
-                @"%USERPROFILE%",
-                @"%COMMONPROGRAMFILES%",
-                @"%PROGRAMFILES%",
-                @"%PROGRAMDATA%"
-            };
-            for (int i = 0; i < replace1list.Count; i++)
-            {
-                var2edit = Regex.Replace(var2edit, replace1list[i], replace2list[i], RegexOptions.IgnoreCase);
-            }
-            return var2edit;
-        }
-        private void CreateRegUninstall(string sourcePath, string destinationPath)
-        {
-            List<string> lines2write = new List<string>();
-            string[] lines = File.ReadAllLines(sourcePath);
-
-            foreach (string line in lines)
-            {
-                if (line.StartsWith("[")) { lines2write.Add(line.Replace("[", "[-")); }
-                if (line.StartsWith("windows registry editor", true, null) ||
-                    line.StartsWith("regedit", true, null)) { lines2write.Add(line); lines2write.Add(""); }
-                if (line.StartsWith(";")) { lines2write.Add(line); }
-            }
-
-            if (File.Exists(destinationPath)) { File.Move(destinationPath, destinationPath + @".BAK"); }
-
-            using (var file = new StreamWriter(destinationPath, false))
-            {
-                foreach (var line in lines2write) { file.WriteLine(line); }
-            }
-        }
-        private void ControlCenter(Control item)
+        // Misc
+        private void ControlCenter(Control item) // Snap a control to the center of parent item
         {
             int pad = ((item.Parent.Height / 2) - item.Height) / 2;
             item.Margin = new Padding(item.Margin.Left, pad, item.Margin.Right, pad);
-        }
-        static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
-        {
-            // Get information about the source directory
-            var dir = new DirectoryInfo(sourceDir);
-
-            // Check if the source directory exists
-            if (!dir.Exists)
-                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
-
-            // Cache directories before we start copying
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            // Create the destination directory
-            Directory.CreateDirectory(destinationDir);
-
-            // Get the files in the source directory and copy to the destination directory
-            foreach (FileInfo file in dir.GetFiles())
-            {
-                string targetFilePath = Path.Combine(destinationDir, file.Name);
-                file.CopyTo(targetFilePath);
-            }
-
-            // If recursive and copying subdirectories, recursively call this method
-            if (recursive)
-            {
-                foreach (DirectoryInfo subDir in dirs)
-                {
-                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                    CopyDirectory(subDir.FullName, newDestinationDir, true);
-                }
-            }
-        }
-        static void DeleteEmptyDirs(string dir)
-        {
-            if (String.IsNullOrEmpty(dir))
-            {
-                throw new ArgumentException(
-                    "Starting directory is a null reference or an empty string",
-                    "dir");
-            }
-
-            try
-            {
-                foreach (var d in Directory.EnumerateDirectories(dir))
-                {
-                    DeleteEmptyDirs(d);
-                }
-
-                var entries = Directory.EnumerateFileSystemEntries(dir);
-
-                if (!entries.Any())
-                {
-                    try
-                    {
-                        Directory.Delete(dir);
-                    }
-                    catch (UnauthorizedAccessException) { }
-                    catch (DirectoryNotFoundException) { }
-                }
-            }
-            catch (UnauthorizedAccessException) { }
         }
     }
 
@@ -381,7 +399,7 @@ namespace no_install
     {
         public static void Test(string[] arguments)
         {
-            MessageBox.Show(arguments[0]);
+            FlexibleMessageBox.Show(arguments[0]);
         }
     }
 }
