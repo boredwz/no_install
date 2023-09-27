@@ -57,6 +57,7 @@
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
             this.buttonCreate2Reg = new System.Windows.Forms.Button();
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -354,6 +355,7 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.checkBox1);
             this.panel2.Controls.Add(this.buttonRemoveJunk);
             this.panel2.Controls.Add(this.buttonSandboxie);
             this.panel2.Controls.Add(this.tableRGroupCreate);
@@ -423,6 +425,16 @@
             this.tableRGroupLinkType.TabStop = false;
             this.tableRGroupLinkType.Text = "Default Link Type";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(7, 466);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(125, 20);
+            this.checkBox1.TabIndex = 6;
+            this.checkBox1.Text = "Use \'+\' directory";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -439,6 +451,7 @@
             this.tableL1.PerformLayout();
             this.tableL3.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.tableRGroupCreate.ResumeLayout(false);
             this.tableRGroupLinkType.ResumeLayout(false);
             this.tableRGroupLinkType.PerformLayout();
@@ -477,6 +490,7 @@
         private System.Windows.Forms.Button buttonCreate2Reg;
         private System.Windows.Forms.Button buttonSandboxie;
         private System.Windows.Forms.Button buttonRemoveJunk;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
 
