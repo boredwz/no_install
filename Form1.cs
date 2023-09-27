@@ -128,14 +128,18 @@ namespace no_install
         private void buttonCreateInstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
-            bool reg = File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"));
+            string reg = checkBox1.Checked ? @"+\" : @"";
+            if (File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"))) { reg += @"1.reg"; }
             CreateCmd(textBoxDirectory.Text + @"\SymLink Installer.cmd", GetCmdList(true, reg));
+            if (reg == @"+\1.reg") { CreatePlusFolder(Path.Combine(textBoxDirectory.Text, @"+")); }
         }
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
             if (textBoxDirectory.Text == "") { return; }
-            bool reg = File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"));
+            string reg = checkBox1.Checked ? @"+\" : @"";
+            if (File.Exists(Path.Combine(textBoxDirectory.Text, @"2.reg"))) { reg += @"2.reg"; }
             CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, reg));
+            if (reg == @"+\2.reg") { CreatePlusFolder(Path.Combine(textBoxDirectory.Text, @"+")); }
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
@@ -186,6 +190,17 @@ namespace no_install
 
 
         // File creation, editing and deleting
+        private void CreatePlusFolder(string Dir)
+        {
+            Directory.CreateDirectory(Dir);
+            string Parent = Path.GetDirectoryName(Dir);
+            var files = Directory.EnumerateFiles(Parent, "*", SearchOption.TopDirectoryOnly);
+            foreach (string file in files)
+            {
+                string fileName = Path.GetFileName(file);
+                if (!Regex.IsMatch(fileName, @".cmd", RegexOptions.IgnoreCase)) { File.Move(file, Path.Combine(Dir, fileName)); };
+            }
+        }
         private void CreateBackupFile(string filePath)
         {
             string backupPath = filePath + @".BAK";
@@ -346,7 +361,7 @@ namespace no_install
             }
             return var2edit;
         }
-        private List<string> GetCmdList (bool installer, bool reg) // mklink, md, regedit
+        private List<string> GetCmdList (bool installer, string reg) // mklink, md, regedit
         {
             string par;
             string itemPath;
@@ -378,11 +393,10 @@ namespace no_install
                 else { list.Add($"{par} \"{itemPath}\" && echo Deleted: {itemPath}"); }
             }
             if (!installer) { list.AddRange(list2); }
-            if (reg)
+            if (reg != "")
             {
-                string regName = installer ? @"1" : @"2";
                 list.Add(@"");
-                list.Add($"regedit /s {regName}.reg");
+                list.Add($"regedit /s {reg}");
             }
             return list;
         }
