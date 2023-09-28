@@ -104,7 +104,7 @@ namespace no_install
             {
                 foreach (string i in dir.FileNames)
                 {
-                    if (!i.Contains(textBoxDirectory.Text)) { MessageBox.Show($"The item must be inside the folder\n'{textBoxDirectory.Text}'",i); break; }
+                    if (!i.Contains(textBoxDirectory.Text)) { MessageBox.Show($"The item must be inside the folder\n'{textBoxDirectory.Text}'", i); break; }
                     string j = i.Substring(textBoxDirectory.Text.Length + 1);
                     var lvi = new ListViewItem(j);
                     lvi.SubItems.Add(comboBoxFile.Text);
@@ -191,7 +191,8 @@ namespace no_install
                 string i = file.Substring(currentDir.Length + 1);
                 if (regexJunkMatch.IsMatch(i) || !regexMatch.IsMatch(i)) { File.Delete(file); }
             }
-            DeleteEmptyDirs(currentDir);
+            Directory.Delete(Path.Combine(currentDir, @"C\ProgramData\Microsoft\Windows\Start Menu"), true);
+            DeleteEmptyDirs(currentDir, regex);
             //FlexibleMessageBox.Show(str);
         }
 
@@ -311,7 +312,7 @@ namespace no_install
                 }
             }
         }
-        private void DeleteEmptyDirs(string dir)
+        private void DeleteEmptyDirs(string dir, string regexExclude)
         {
             if (String.IsNullOrEmpty(dir))
             {
@@ -324,15 +325,20 @@ namespace no_install
             {
                 foreach (var d in Directory.EnumerateDirectories(dir))
                 {
-                    DeleteEmptyDirs(d);
+                    string r = regexExclude;
+                    DeleteEmptyDirs(d, r);
                 }
 
                 var entries = Directory.EnumerateFileSystemEntries(dir);
+
 
                 if (!entries.Any())
                 {
                     try
                     {
+                        bool ex = Regex.IsMatch(new DirectoryInfo(dir).Name, regexExclude, RegexOptions.IgnoreCase);
+                        //FlexibleMessageBox.Show($"Path: '{dir}'\nName: '{new DirectoryInfo(dir).Name}'\nMatches: " + ex.ToString());
+                        if (ex) { return; }
                         Directory.Delete(dir);
                     }
                     catch (UnauthorizedAccessException) { }
@@ -371,7 +377,7 @@ namespace no_install
             }
             return var2edit;
         }
-        private List<string> GetCmdList (bool installer, string reg) // mklink, md, regedit
+        private List<string> GetCmdList(bool installer, string reg) // mklink, md, regedit
         {
             string par;
             string itemPath;
@@ -406,6 +412,14 @@ namespace no_install
             if (reg != "")
             {
                 list.Add(@"");
+                if (installer)
+                {
+                    list.AddRange(new List<string>
+                    {
+                        @":: Replace old user Drive letter + Name in 1.reg",
+                        ":: powershell \"(gc -LiteralPath '%~dp0+\\1.reg') -replace '(.:)(\\\\\\\\Users\\\\\\\\)[^\\\\]+?\\\\\\\\','%SYSTEMDRIVE%${2}%USERNAME%\\\\'|sc -LiteralPath '%~dp0+\\1.reg'\""
+                    });
+                }
                 list.Add($"regedit /s {reg}");
             }
             return list;
