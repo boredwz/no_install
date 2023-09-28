@@ -16,6 +16,7 @@ namespace no_install
         }
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.Text = $"NO INSTALL v{ProductVersion.Substring(0, 5)} (by wvzxn)";
             ControlCenter(textBoxDirectory);
             ControlCenter(textBoxRegex);
             comboBoxFile.Text = comboBoxFile.Items[0].ToString();
@@ -127,19 +128,25 @@ namespace no_install
         }
         private void buttonCreateInstaller_Click(object sender, EventArgs e)
         {
-            if (textBoxDirectory.Text == "") { return; }
-            string reg = checkBox1.Checked ? @"+\" : @"";
-            if (File.Exists(Path.Combine(textBoxDirectory.Text, @"1.reg"))) { reg += @"1.reg"; }
-            CreateCmd(textBoxDirectory.Text + @"\SymLink Installer.cmd", GetCmdList(true, reg));
-            if (reg == @"+\1.reg") { CreatePlusFolder(Path.Combine(textBoxDirectory.Text, @"+")); }
+            string directory = textBoxDirectory.Text;
+            if (directory == "") { return; }
+
+            string reg = @"1.reg";
+            if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
+            if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
+
+            CreateCmd(directory + @"\SymLink Installer.cmd", GetCmdList(true, reg));
         }
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
-            if (textBoxDirectory.Text == "") { return; }
-            string reg = checkBox1.Checked ? @"+\" : @"";
-            if (File.Exists(Path.Combine(textBoxDirectory.Text, @"2.reg"))) { reg += @"2.reg"; }
+            string directory = textBoxDirectory.Text;
+            if (directory == "") { return; }
+
+            string reg = @"2.reg";
+            if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
+            if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
+
             CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, reg));
-            if (reg == @"+\2.reg") { CreatePlusFolder(Path.Combine(textBoxDirectory.Text, @"+")); }
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
@@ -192,13 +199,16 @@ namespace no_install
         // File creation, editing and deleting
         private void CreatePlusFolder(string Dir)
         {
-            Directory.CreateDirectory(Dir);
-            string Parent = Path.GetDirectoryName(Dir);
-            var files = Directory.EnumerateFiles(Parent, "*", SearchOption.TopDirectoryOnly);
-            foreach (string file in files)
+            string plusDir = Path.Combine(Dir, @"+");
+            if (!Directory.Exists(plusDir)) { Directory.CreateDirectory(plusDir); }
+            var files = Directory.EnumerateFiles(Dir, "*", SearchOption.TopDirectoryOnly);
+            foreach (string filePath in files)
             {
-                string fileName = Path.GetFileName(file);
-                if (!Regex.IsMatch(fileName, @".cmd", RegexOptions.IgnoreCase)) { File.Move(file, Path.Combine(Dir, fileName)); };
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                string fileExt = Path.GetExtension(filePath);
+                string fileNewPath = Path.Combine(plusDir, fileName + fileExt);
+                if (File.Exists(fileNewPath)) { fileNewPath = Path.Combine(plusDir, fileName + @" (2)" + fileExt); }
+                if (!Regex.IsMatch(fileName + fileExt, @"symlink|\.cmd", RegexOptions.IgnoreCase)) { File.Move(filePath, fileNewPath); }
             }
         }
         private void CreateBackupFile(string filePath)

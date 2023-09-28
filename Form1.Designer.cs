@@ -52,12 +52,12 @@
             this.tableL3 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.buttonRemoveJunk = new System.Windows.Forms.Button();
             this.buttonSandboxie = new System.Windows.Forms.Button();
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
             this.buttonCreate2Reg = new System.Windows.Forms.Button();
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -367,6 +367,16 @@
             this.panel2.Size = new System.Drawing.Size(197, 493);
             this.panel2.TabIndex = 1;
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(7, 466);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(125, 20);
+            this.checkBox1.TabIndex = 6;
+            this.checkBox1.Text = "Use \'+\' directory";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
             // buttonRemoveJunk
             // 
             this.buttonRemoveJunk.Location = new System.Drawing.Point(7, 282);
@@ -424,16 +434,6 @@
             this.tableRGroupLinkType.TabIndex = 2;
             this.tableRGroupLinkType.TabStop = false;
             this.tableRGroupLinkType.Text = "Default Link Type";
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(7, 466);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(125, 20);
-            this.checkBox1.TabIndex = 6;
-            this.checkBox1.Text = "Use \'+\' directory";
-            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
