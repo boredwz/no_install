@@ -191,7 +191,8 @@ namespace no_install
                 string i = file.Substring(currentDir.Length + 1);
                 if (regexJunkMatch.IsMatch(i) || !regexMatch.IsMatch(i)) { File.Delete(file); }
             }
-            Directory.Delete(Path.Combine(currentDir, @"C\ProgramData\Microsoft\Windows\Start Menu"), true);
+            string startMenuLnkJunk = Path.Combine(currentDir, @"C\ProgramData\Microsoft\Windows\Start Menu");
+            if (Directory.Exists(startMenuLnkJunk)) { Directory.Delete(startMenuLnkJunk, true); }
             DeleteEmptyDirs(currentDir, regex);
             //FlexibleMessageBox.Show(str);
         }
