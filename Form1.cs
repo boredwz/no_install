@@ -443,13 +443,13 @@ namespace no_install
                     if (installer)
                     { list.Add($"md \"{parentPath}\" && echo Folder created: {parentPath}"); }
                     else
-                    { list2.Add($"rd \"{parentPath}\" 2>nul && echo Deleted: {parentPath}"); }
+                    { list2.Add($"rd \"{parentPath}\" && echo Deleted: {parentPath}"); }
                 }
 
                 if (installer)
                 { list.Add($"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\""); }
                 else
-                { list.Add($"{par} \"{itemPath}\" 2>nul && echo Deleted: {itemPath}"); }
+                { list.Add($"{par} \"{itemPath}\" && echo Deleted: {itemPath}"); }
             }
 
             if (!installer) { list.AddRange(list2); }
