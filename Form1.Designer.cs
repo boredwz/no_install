@@ -58,6 +58,7 @@
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
             this.buttonCreate2Reg = new System.Windows.Forms.Button();
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
+            this.buttonRemoveLeftovers = new System.Windows.Forms.Button();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -379,7 +380,7 @@
             // 
             // buttonRemoveJunk
             // 
-            this.buttonRemoveJunk.Location = new System.Drawing.Point(7, 282);
+            this.buttonRemoveJunk.Location = new System.Drawing.Point(7, 292);
             this.buttonRemoveJunk.Margin = new System.Windows.Forms.Padding(0);
             this.buttonRemoveJunk.Name = "buttonRemoveJunk";
             this.buttonRemoveJunk.Size = new System.Drawing.Size(180, 30);
@@ -390,7 +391,7 @@
             // 
             // buttonSandboxie
             // 
-            this.buttonSandboxie.Location = new System.Drawing.Point(7, 249);
+            this.buttonSandboxie.Location = new System.Drawing.Point(7, 262);
             this.buttonSandboxie.Margin = new System.Windows.Forms.Padding(0);
             this.buttonSandboxie.Name = "buttonSandboxie";
             this.buttonSandboxie.Size = new System.Drawing.Size(180, 30);
@@ -401,19 +402,20 @@
             // 
             // tableRGroupCreate
             // 
+            this.tableRGroupCreate.Controls.Add(this.buttonRemoveLeftovers);
             this.tableRGroupCreate.Controls.Add(this.buttonCreate2Reg);
             this.tableRGroupCreate.Controls.Add(this.buttonCreateInstaller);
             this.tableRGroupCreate.Controls.Add(this.buttonCreateUninstaller);
             this.tableRGroupCreate.Location = new System.Drawing.Point(0, 76);
             this.tableRGroupCreate.Name = "tableRGroupCreate";
-            this.tableRGroupCreate.Size = new System.Drawing.Size(194, 152);
+            this.tableRGroupCreate.Size = new System.Drawing.Size(194, 167);
             this.tableRGroupCreate.TabIndex = 3;
             this.tableRGroupCreate.TabStop = false;
             this.tableRGroupCreate.Text = "Create";
             // 
             // buttonCreate2Reg
             // 
-            this.buttonCreate2Reg.Location = new System.Drawing.Point(7, 97);
+            this.buttonCreate2Reg.Location = new System.Drawing.Point(7, 134);
             this.buttonCreate2Reg.Margin = new System.Windows.Forms.Padding(0);
             this.buttonCreate2Reg.Name = "buttonCreate2Reg";
             this.buttonCreate2Reg.Size = new System.Drawing.Size(180, 30);
@@ -434,6 +436,17 @@
             this.tableRGroupLinkType.TabIndex = 2;
             this.tableRGroupLinkType.TabStop = false;
             this.tableRGroupLinkType.Text = "Default Link Type";
+            // 
+            // buttonRemoveLeftovers
+            // 
+            this.buttonRemoveLeftovers.Location = new System.Drawing.Point(7, 104);
+            this.buttonRemoveLeftovers.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonRemoveLeftovers.Name = "buttonRemoveLeftovers";
+            this.buttonRemoveLeftovers.Size = new System.Drawing.Size(180, 30);
+            this.buttonRemoveLeftovers.TabIndex = 3;
+            this.buttonRemoveLeftovers.Text = "Remove Leftovers.cmd";
+            this.buttonRemoveLeftovers.UseVisualStyleBackColor = true;
+            this.buttonRemoveLeftovers.Click += new System.EventHandler(this.buttonRemoveLeftovers_Click);
             // 
             // Form1
             // 
@@ -491,6 +504,7 @@
         private System.Windows.Forms.Button buttonSandboxie;
         private System.Windows.Forms.Button buttonRemoveJunk;
         private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Button buttonRemoveLeftovers;
     }
 }
 

@@ -54,7 +54,7 @@ namespace no_install
             foreach (string itemFullPath in Directory.EnumerateDirectories(textBoxDirectory.Text, "*", SearchOption.AllDirectories))
             {
                 string itemPath = itemFullPath.Substring(textBoxDirectory.Text.Length + 1);
-                string itemName = Regex.Replace(itemPath, @".+\\(.+?)$", @"$1");
+                string itemName = Regex.Replace(itemPath, @".+\\([^\\]+?)$", @"$1");
 
                 if (regex == "")
                 {
@@ -62,8 +62,22 @@ namespace no_install
                 }
                 else
                 {
+                    if (Regex.IsMatch(itemName, @"vst3|vstplugins", RegexOptions.IgnoreCase))
+                    {
+                        foreach (string i in Directory.EnumerateFiles(itemFullPath, "*"))
+                        {
+                            string iPath = i.Substring(textBoxDirectory.Text.Length + 1);
+                            string iName = Regex.Replace(iPath, @".+\\([^\\]+?)$", @"$1");
+
+                            if (!Regex.IsMatch(iName, regex, RegexOptions.IgnoreCase)) { continue; }
+
+                            var ilvi = new ListViewItem(iPath);
+                            ilvi.SubItems.Add(File.Exists(i) ? comboBoxFile.Text : comboBoxDir.Text);
+                            panelRList.Items.Add(ilvi);
+                        }
+                    }
                     if ((!Regex.IsMatch(itemName, regex, RegexOptions.IgnoreCase))
-                    || (Regex.IsMatch(itemPath, $"({regex}).+?({regex})", RegexOptions.IgnoreCase))) { continue; }
+                    || (Regex.IsMatch(itemPath, $"({regex})" + @".*\\[^\\]*?" + $"({regex})", RegexOptions.IgnoreCase))) { continue; }
                 }
 
                 var lvi = new ListViewItem(itemPath);
@@ -78,7 +92,7 @@ namespace no_install
                 foreach (string i in Directory.EnumerateFileSystemEntries(itemFullPath, "*"))
                 {
                     string iPath = i.Substring(textBoxDirectory.Text.Length + 1);
-                    string iName = Regex.Replace(iPath, @".+\\(.+?)$", @"$1");
+                    string iName = Regex.Replace(iPath, @".+\\([^\\]+?)$", @"$1");
 
                     if (!Regex.IsMatch(iName, regex, RegexOptions.IgnoreCase)) { continue; }
 
@@ -150,8 +164,10 @@ namespace no_install
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
-            if (textBoxDirectory.Text == "") { return; }
-            CreateRegUninstall($"{textBoxDirectory.Text}\\1.reg", $"{textBoxDirectory.Text}\\2.reg");
+            string dir = textBoxDirectory.Text;
+            if (dir == "") { return; }
+            if (!Directory.Exists(Path.Combine(dir, @"1.reg"))) { return; }
+            CreateRegUninstall(Path.Combine(dir, @"1.reg"), Path.Combine(dir, @"2.reg"));
         }
         private void buttonSandboxie_Click(object sender, EventArgs e)
         {
@@ -196,6 +212,27 @@ namespace no_install
             DeleteEmptyDirs(currentDir, regex);
             //FlexibleMessageBox.Show(str);
         }
+        private void buttonRemoveLeftovers_Click(object sender, EventArgs e)
+        {
+            string directory = textBoxDirectory.Text;
+            var text = new List<string> {"@echo off"};
+            foreach (ListViewItem listItem in panelRList.Items)
+            {
+                if (!listItem.Checked) { continue; }
+                string itemPath = EditEnv(listItem.Text);
+
+                bool isFile = File.Exists(Path.Combine(directory, listItem.Text));
+                string line = isFile ? $"del /f /q \"{itemPath}\"" : $"rd \"{itemPath}\" 2>nul || rd /s /q \"{itemPath}\"";
+                text.Add(line);
+            }
+            text.Add("pause");
+            string rlPath = Path.Combine(directory, "Remove Leftovers.cmd");
+            if (File.Exists(rlPath)) { File.Delete(rlPath); }
+            using (var file = new StreamWriter(rlPath, false))
+            {
+                foreach (var line in text) { file.WriteLine(line); }
+            }
+        }
 
 
         // File creation, editing and deleting
@@ -210,7 +247,7 @@ namespace no_install
                 string fileExt = Path.GetExtension(filePath);
                 string fileNewPath = Path.Combine(plusDir, fileName + fileExt);
                 if (File.Exists(fileNewPath)) { fileNewPath = Path.Combine(plusDir, fileName + @" (2)" + fileExt); }
-                if (!Regex.IsMatch(fileName + fileExt, @"symlink|\.cmd", RegexOptions.IgnoreCase)) { File.Move(filePath, fileNewPath); }
+                if (!Regex.IsMatch(fileName + fileExt, @"symlink", RegexOptions.IgnoreCase)) { File.Move(filePath, fileNewPath); }
             }
         }
         private void CreateBackupFile(string filePath)
@@ -394,7 +431,7 @@ namespace no_install
                 if (!listItem.Checked) { continue; }
 
                 if (installer) { par = listItem.SubItems[1].Text == "(default)" ? "" : $"{listItem.SubItems[1].Text} "; }
-                else { par = File.Exists(textBoxDirectory.Text + "\\" + listItem.Text) ? "del /f /q" : "rd /q"; }
+                else { par = File.Exists(textBoxDirectory.Text + "\\" + listItem.Text) ? "del /f /q" : "rd"; }
                 itemPath = EditEnv(listItem.Text);
                 parentPath = Path.GetDirectoryName(itemPath);
                 parentName = Regex.Replace(listItem.Text, @".+\\(.+?)\\.+?$", @"$1");
@@ -403,12 +440,18 @@ namespace no_install
                 && (!mdDuplicateList.Contains(parentPath)))
                 {
                     mdDuplicateList.Add(parentPath);
-                    if (installer) { list.Add($"md \"{parentPath}\" && echo Folder created: {parentPath}"); }
-                    else { list2.Add($"rd /q \"{parentPath}\" && echo Deleted: {parentPath}"); }
+                    if (installer)
+                    { list.Add($"md \"{parentPath}\" && echo Folder created: {parentPath}"); }
+                    else
+                    { list2.Add($"rd \"{parentPath}\" 2>nul && echo Deleted: {parentPath}"); }
                 }
-                if (installer) { list.Add($"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\""); }
-                else { list.Add($"{par} \"{itemPath}\" && echo Deleted: {itemPath}"); }
+
+                if (installer)
+                { list.Add($"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\""); }
+                else
+                { list.Add($"{par} \"{itemPath}\" 2>nul && echo Deleted: {itemPath}"); }
             }
+
             if (!installer) { list.AddRange(list2); }
             if (reg != "")
             {
