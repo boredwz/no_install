@@ -56,9 +56,9 @@
             this.buttonRemoveJunk = new System.Windows.Forms.Button();
             this.buttonSandboxie = new System.Windows.Forms.Button();
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
+            this.buttonRemoveLeftovers = new System.Windows.Forms.Button();
             this.buttonCreate2Reg = new System.Windows.Forms.Button();
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
-            this.buttonRemoveLeftovers = new System.Windows.Forms.Button();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -413,6 +413,17 @@
             this.tableRGroupCreate.TabStop = false;
             this.tableRGroupCreate.Text = "Create";
             // 
+            // buttonRemoveLeftovers
+            // 
+            this.buttonRemoveLeftovers.Location = new System.Drawing.Point(7, 104);
+            this.buttonRemoveLeftovers.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonRemoveLeftovers.Name = "buttonRemoveLeftovers";
+            this.buttonRemoveLeftovers.Size = new System.Drawing.Size(180, 30);
+            this.buttonRemoveLeftovers.TabIndex = 3;
+            this.buttonRemoveLeftovers.Text = "Remove Leftovers.cmd";
+            this.buttonRemoveLeftovers.UseVisualStyleBackColor = true;
+            this.buttonRemoveLeftovers.Click += new System.EventHandler(this.buttonRemoveLeftovers_Click);
+            // 
             // buttonCreate2Reg
             // 
             this.buttonCreate2Reg.Location = new System.Drawing.Point(7, 134);
@@ -436,17 +447,6 @@
             this.tableRGroupLinkType.TabIndex = 2;
             this.tableRGroupLinkType.TabStop = false;
             this.tableRGroupLinkType.Text = "Default Link Type";
-            // 
-            // buttonRemoveLeftovers
-            // 
-            this.buttonRemoveLeftovers.Location = new System.Drawing.Point(7, 104);
-            this.buttonRemoveLeftovers.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonRemoveLeftovers.Name = "buttonRemoveLeftovers";
-            this.buttonRemoveLeftovers.Size = new System.Drawing.Size(180, 30);
-            this.buttonRemoveLeftovers.TabIndex = 3;
-            this.buttonRemoveLeftovers.Text = "Remove Leftovers.cmd";
-            this.buttonRemoveLeftovers.UseVisualStyleBackColor = true;
-            this.buttonRemoveLeftovers.Click += new System.EventHandler(this.buttonRemoveLeftovers_Click);
             // 
             // Form1
             // 
