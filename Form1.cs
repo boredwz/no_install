@@ -225,6 +225,7 @@ namespace no_install
                 string line = isFile ? $"del /f /q \"{itemPath}\"" : $"rd \"{itemPath}\" 2>nul || rd /s /q \"{itemPath}\"";
                 text.Add(line);
             }
+            text.Add("if exist \"2.reg\" (regedit /s 2.reg)");
             text.Add("pause");
             string rlPath = Path.Combine(directory, "Remove Leftovers.cmd");
             if (File.Exists(rlPath)) { File.Delete(rlPath); }
@@ -391,27 +392,33 @@ namespace no_install
         {
             var replace1list = new List<string>
             {
-                @"^(c)",
-                @"^(.+?appdata\\roaming)",
-                @"^(.+?appdata\\local)",
-                @"^(.*?users\\\(name\))",
-                @"^(.*?common files)",
-                @"^(.*?program files)",
-                @"^(.*?programdata)"
+                @"^.+?\\program files \(x86\)\\common files\\",
+                @"^.+?\\program files \(x86\)\\",
+                @"^.+?\\program files\\common files\\",
+                @"^.+?\\program files\\",
+                @"^.+?\\programdata\\",
+                @"^.+?\\appdata\\local\\",
+                @"^.+?\\appdata\\roaming\\",
+                @"^.+?\\users\\\(name\)\\",
+                @"^.+?\\users\\public\\",
+                @"^c\\"
             };
             var replace2list = new List<string>
             {
-                @"%SYSTEMDRIVE%",
-                @"%APPDATA%",
-                @"%LOCALAPPDATA%",
-                @"%USERPROFILE%",
+                @"%COMMONPROGRAMFILES(x86)%",
+                @"%PROGRAMFILES(x86)%",
                 @"%COMMONPROGRAMFILES%",
                 @"%PROGRAMFILES%",
-                @"%PROGRAMDATA%"
+                @"%PROGRAMDATA%",
+                @"%LOCALAPPDATA%",
+                @"%APPDATA%",
+                @"%USERPROFILE%",
+                @"%PUBLIC%",
+                @"%SYSTEMDRIVE%"
             };
             for (int i = 0; i < replace1list.Count; i++)
             {
-                var2edit = Regex.Replace(var2edit, replace1list[i], replace2list[i], RegexOptions.IgnoreCase);
+                var2edit = Regex.Replace(var2edit, replace1list[i], replace2list[i] + @"\", RegexOptions.IgnoreCase);
             }
             return var2edit;
         }
