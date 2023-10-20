@@ -264,7 +264,6 @@ namespace NO_INSTALL
                 {
                     string itemName = Regex.Replace(itemPath, @"^.+\\([^\\]+?)$", @"$1");
                     string destination = Path.Combine(folderPath, itemName);
-                    FlexibleMessageBox.Show($"Source:\n{itemPath}\nDestination:\n{destination}");
 
                     if (File.Exists(itemPath))
                     {
