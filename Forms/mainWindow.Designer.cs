@@ -1,6 +1,6 @@
-﻿namespace no_install
+﻿namespace NO_INSTALL
 {
-    partial class Form1
+    partial class mainWindow
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.buttonSelectDir = new System.Windows.Forms.Button();
             this.textBoxRegex = new System.Windows.Forms.TextBox();
@@ -50,15 +51,18 @@
             this.tableL = new System.Windows.Forms.TableLayoutPanel();
             this.tableL1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableL3 = new System.Windows.Forms.TableLayoutPanel();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.buttonRemoveJunk = new System.Windows.Forms.Button();
             this.buttonSandboxie = new System.Windows.Forms.Button();
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
-            this.buttonRemoveLeftovers = new System.Windows.Forms.Button();
             this.buttonCreate2Reg = new System.Windows.Forms.Button();
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
+            this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
+            this.menuAddons = new System.Windows.Forms.MenuItem();
+            this.menuAddonsCollectVSTs = new System.Windows.Forms.MenuItem();
+            this.menuAddonsLeftoversCmd = new System.Windows.Forms.MenuItem();
+            this.menuAbout = new System.Windows.Forms.MenuItem();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -337,7 +341,6 @@
             this.tableL3.Controls.Add(this.buttonRemove, 2, 0);
             this.tableL3.Controls.Add(this.buttonAddFolder, 1, 0);
             this.tableL3.Controls.Add(this.buttonAddFiles, 0, 0);
-            this.tableL3.Controls.Add(this.panel1, 3, 0);
             this.tableL3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableL3.Location = new System.Drawing.Point(0, 459);
             this.tableL3.Margin = new System.Windows.Forms.Padding(0);
@@ -346,13 +349,6 @@
             this.tableL3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableL3.Size = new System.Drawing.Size(785, 34);
             this.tableL3.TabIndex = 9;
-            // 
-            // panel1
-            // 
-            this.panel1.Location = new System.Drawing.Point(285, 3);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(465, 28);
-            this.panel1.TabIndex = 10;
             // 
             // panel2
             // 
@@ -402,7 +398,6 @@
             // 
             // tableRGroupCreate
             // 
-            this.tableRGroupCreate.Controls.Add(this.buttonRemoveLeftovers);
             this.tableRGroupCreate.Controls.Add(this.buttonCreate2Reg);
             this.tableRGroupCreate.Controls.Add(this.buttonCreateInstaller);
             this.tableRGroupCreate.Controls.Add(this.buttonCreateUninstaller);
@@ -412,17 +407,6 @@
             this.tableRGroupCreate.TabIndex = 3;
             this.tableRGroupCreate.TabStop = false;
             this.tableRGroupCreate.Text = "Create";
-            // 
-            // buttonRemoveLeftovers
-            // 
-            this.buttonRemoveLeftovers.Location = new System.Drawing.Point(7, 104);
-            this.buttonRemoveLeftovers.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonRemoveLeftovers.Name = "buttonRemoveLeftovers";
-            this.buttonRemoveLeftovers.Size = new System.Drawing.Size(180, 30);
-            this.buttonRemoveLeftovers.TabIndex = 3;
-            this.buttonRemoveLeftovers.Text = "Remove Leftovers.cmd";
-            this.buttonRemoveLeftovers.UseVisualStyleBackColor = true;
-            this.buttonRemoveLeftovers.Click += new System.EventHandler(this.buttonRemoveLeftovers_Click);
             // 
             // buttonCreate2Reg
             // 
@@ -448,13 +432,46 @@
             this.tableRGroupLinkType.TabStop = false;
             this.tableRGroupLinkType.Text = "Default Link Type";
             // 
-            // Form1
+            // mainMenu1
+            // 
+            this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuAddons,
+            this.menuAbout});
+            // 
+            // menuAddons
+            // 
+            this.menuAddons.Index = 0;
+            this.menuAddons.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuAddonsCollectVSTs,
+            this.menuAddonsLeftoversCmd});
+            this.menuAddons.Text = "Addons";
+            // 
+            // menuAddonsCollectVSTs
+            // 
+            this.menuAddonsCollectVSTs.Index = 0;
+            this.menuAddonsCollectVSTs.Text = "Collect VSTs in a folder";
+            this.menuAddonsCollectVSTs.Click += new System.EventHandler(this.menuAddonsCollectVSTs_Click);
+            // 
+            // menuAddonsLeftoversCmd
+            // 
+            this.menuAddonsLeftoversCmd.Index = 1;
+            this.menuAddonsLeftoversCmd.Text = "Remove Leftovers.cmd";
+            this.menuAddonsLeftoversCmd.Click += new System.EventHandler(this.menuAddonsLeftoversCmd_Click);
+            // 
+            // menuAbout
+            // 
+            this.menuAbout.Index = 1;
+            this.menuAbout.Text = "About";
+            this.menuAbout.Click += new System.EventHandler(this.menuAbout_Click);
+            // 
+            // mainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(982, 493);
             this.Controls.Add(this.tableBack);
-            this.Name = "Form1";
+            this.Menu = this.mainMenu1;
+            this.Name = "mainWindow";
             this.Text = "NO INSTALL (by wvzxn)";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.SizeChanged += new System.EventHandler(this.Form1_SizeChanged);
@@ -496,7 +513,6 @@
         private System.Windows.Forms.TableLayoutPanel tableL1;
         private System.Windows.Forms.TableLayoutPanel tableL3;
         private System.Windows.Forms.Label labelComboDir;
-        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.GroupBox tableRGroupLinkType;
         private System.Windows.Forms.GroupBox tableRGroupCreate;
@@ -504,7 +520,11 @@
         private System.Windows.Forms.Button buttonSandboxie;
         private System.Windows.Forms.Button buttonRemoveJunk;
         private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.Button buttonRemoveLeftovers;
+        private System.Windows.Forms.MainMenu mainMenu1;
+        private System.Windows.Forms.MenuItem menuAddons;
+        private System.Windows.Forms.MenuItem menuAddonsCollectVSTs;
+        private System.Windows.Forms.MenuItem menuAbout;
+        private System.Windows.Forms.MenuItem menuAddonsLeftoversCmd;
     }
 }
 

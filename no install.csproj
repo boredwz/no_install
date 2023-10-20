@@ -74,16 +74,34 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FlexibleMessageBox.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Forms\about.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Forms\about.Designer.cs">
+      <DependentUpon>about.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\mainWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\mainWindow.Designer.cs">
+      <DependentUpon>mainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\userEnter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\userEnter.Designer.cs">
+      <DependentUpon>userEnter.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\about.resx">
+      <DependentUpon>about.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\mainWindow.resx">
+      <DependentUpon>mainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\userEnter.resx">
+      <DependentUpon>userEnter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

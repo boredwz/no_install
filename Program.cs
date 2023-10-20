@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace no_install
+namespace NO_INSTALL
 {
     internal static class Program
     {
@@ -14,7 +14,7 @@ namespace no_install
             if (args.Length > 0) { Background.Test(args); return; }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new mainWindow());
         }
     }
 }

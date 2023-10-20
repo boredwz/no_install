@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using JR.Utils.GUI.Forms;
+using NO_INSTALL.Forms;
 
-namespace no_install
+namespace NO_INSTALL
 {
-    public partial class Form1 : Form
+    public partial class mainWindow : Form
     {
-        public Form1()
+        public mainWindow()
         {
             InitializeComponent();
         }
@@ -173,6 +174,7 @@ namespace no_install
         {
             string currentDir = textBoxDirectory.Text;
             if (currentDir == "") { return; }
+            if (Directory.Exists(Path.Combine(currentDir, @"C"))) { return; }
 
             string envSystemDrive = Environment.GetEnvironmentVariable("SYSTEMDRIVE") + @"\";
             string envUserName = Environment.GetEnvironmentVariable("USERNAME");
@@ -212,7 +214,7 @@ namespace no_install
             DeleteEmptyDirs(currentDir, regex);
             //FlexibleMessageBox.Show(str);
         }
-        private void buttonRemoveLeftovers_Click(object sender, EventArgs e)
+        private void menuAddonsLeftoversCmd_Click(object sender, EventArgs e)
         {
             string directory = textBoxDirectory.Text;
             var text = new List<string> {"@echo off"};
@@ -233,6 +235,56 @@ namespace no_install
             {
                 foreach (var line in text) { file.WriteLine(line); }
             }
+        }
+        private void menuAddonsCollectVSTs_Click(object sender, EventArgs e)
+        {
+            string currentDir = textBoxDirectory.Text;
+            if (currentDir == "") { return; }
+
+            string folderName = "";
+            using (var prompt = new userEnter()) { if (prompt.ShowDialog() == DialogResult.OK) { folderName = prompt.returnValue; } }
+            if (folderName == "") { return; }
+
+            var vstDirList = new List<string>
+            {
+                @"C\Program Files\Common Files\VST3",
+                @"C\Program Files\VSTPlugins",
+                @"C\Program Files (x86)\Common Files\VST3",
+                @"C\Program Files (x86)\VSTPlugins"
+            };
+
+            foreach (string vstDir in vstDirList)
+            {
+                string vstPath = Path.Combine(currentDir, vstDir);
+                string folderPath = Path.Combine(vstPath, folderName);
+                if (!Directory.Exists(vstPath)) { continue; }
+                Directory.CreateDirectory(folderPath);
+                
+                foreach (string itemPath in Directory.EnumerateFileSystemEntries(vstPath, @"*"))
+                {
+                    string itemName = Regex.Replace(itemPath, @"^.+\\([^\\]+?)$", @"$1");
+                    string destination = Path.Combine(folderPath, itemName);
+                    FlexibleMessageBox.Show($"Source:\n{itemPath}\nDestination:\n{destination}");
+
+                    if (File.Exists(itemPath))
+                    {
+                        if (File.Exists(destination)) { continue; }
+                        File.Copy(itemPath, destination);
+                        File.Delete(itemPath);
+                    }
+                    else
+                    {
+                        if (Directory.Exists(destination) || itemName == folderName) { continue; }
+                        CopyDirectory(itemPath, destination, true);
+                        Directory.Delete(itemPath, true );
+                    }
+                }
+            }
+        }
+        private void menuAbout_Click(object sender, EventArgs e)
+        {
+            var aboutForm = new about();
+            aboutForm.ShowDialog();
         }
 
 
@@ -482,6 +534,7 @@ namespace no_install
             int pad = ((item.Parent.Height / 2) - item.Height) / 2;
             item.Margin = new Padding(item.Margin.Left, pad, item.Margin.Right, pad);
         }
+
     }
 
     class Background
