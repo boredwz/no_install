@@ -11,11 +11,12 @@ namespace NO_INSTALL
 {
     public partial class mainWindow : Form
     {
+        string appVersion = Regex.Replace(Application.ProductVersion, @"(\d+\.\d+\.\d+)\.\d+", @"$1");
+
         public mainWindow()
         {
             InitializeComponent();
         }
-        string appVersion = Regex.Replace(Application.ProductVersion, @"(\d+\.\d+\.\d+)\.\d+", @"$1");
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Text = $"NO INSTALL v{appVersion} (by wvzxn)";
@@ -147,22 +148,26 @@ namespace NO_INSTALL
             string directory = textBoxDirectory.Text;
             if (directory == "") { return; }
 
-            string reg = @"1.reg";
-            if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
+            bool customEcho = menuAddonsCustomEcho.Checked;
+            bool pwshReg = menuAddonsPwshReg.Checked;
+            string reg = "1.reg";
+            if (menuAddonsPlusDir.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
             if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
 
-            CreateCmd(directory + @"\SymLink Installer.cmd", GetCmdList(true, directory, reg));
+            CreateCmd(directory + @"\SymLink Installer.cmd", GetCmdList(true, directory, reg, customEcho, pwshReg));
         }
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
             string directory = textBoxDirectory.Text;
             if (directory == "") { return; }
 
-            string reg = @"2.reg";
-            if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
+            bool customEcho = menuAddonsCustomEcho.Checked;
+            bool pwshReg = menuAddonsPwshReg.Checked;
+            string reg = "2.reg";
+            if (menuAddonsPlusDir.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
             if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
 
-            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, directory, reg));
+            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, directory, reg, customEcho, pwshReg));
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
@@ -305,6 +310,18 @@ namespace NO_INSTALL
         {
             var aboutForm = new about();
             aboutForm.ShowDialog();
+        }
+        private void menuAddonsCustomEcho_Click(object sender, EventArgs e)
+        {
+            menuAddonsCustomEcho.Checked = menuAddonsCustomEcho.Checked ? false : true;
+        }
+        private void menuAddonsPwshReg_Click(object sender, EventArgs e)
+        {
+            menuAddonsPwshReg.Checked = menuAddonsPwshReg.Checked ? false : true;
+        }
+        private void menuAddonsPlusDir_Click(object sender, EventArgs e)
+        {
+            menuAddonsPlusDir.Checked = menuAddonsPlusDir.Checked ? false : true;
         }
 
 
@@ -494,7 +511,7 @@ namespace NO_INSTALL
             }
             return var2edit;
         }
-        private List<string> GetCmdList(bool installer, string dir, string reg) // mklink, md, regedit
+        private List<string> GetCmdList(bool installer, string dir, string reg, bool customEcho, bool pwshReg) // mklink, md, regedit
         {
             var mklinkList = new List<string>();
             var mdListPaths = new List<string>();
@@ -522,29 +539,33 @@ namespace NO_INSTALL
                 {
                     mdListPaths.Add(parentPath);
                     string md = installer ?
-                        $"md \"{parentPath}\" && echo Folder created: {parentPath}" :
-                        $"rd \"{parentPath}\" && echo Deleted: {parentPath}";
+                        $"md \"{parentPath}\"" :
+                        $"rd \"{parentPath}\"";
+                    if (customEcho) { md += installer ? $" && echo Folder created: {parentPath}" : $" && echo Deleted: {parentPath}"; }
                     mdList.Add(md);
                 }
 
                 //  mklink / del(rd)
                 string mklinkLine = installer ?
-                    $"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\" >nul && echo SymLinked: {itemPath}" : 
-                    $"{par} \"{itemPath}\" && echo Deleted: {itemPath}";
+                    $"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\"" : 
+                    $"{par} \"{itemPath}\"";
+                if (customEcho) { mklinkLine += installer ? $" >nul && echo SymLinked: {itemPath}" : $" && echo Deleted: {itemPath}"; }
                 mklinkList.Add(mklinkLine);
             }
 
             //  md + mklink
             cmdList.AddRange(installer ? mdList : mklinkList);
-            cmdList.Add("");
+            if (mdList.Count != 0) { cmdList.Add(""); }
             cmdList.AddRange(installer ? mklinkList : mdList);
 
             //  +reg
             if (reg != "")
             {
                 cmdList.Add(@"");
-                if (installer) { cmdList.AddRange(pwshRegFix); }
-                cmdList.Add($"regedit /s {reg}");
+                if (installer && pwshReg) { cmdList.AddRange(pwshRegFix); }
+                string regLine = $"regedit /s {reg}";
+                if (customEcho) { regLine += $" && echo Registry Edit: .\\{reg}"; }
+                cmdList.Add(regLine);
             }
 
             return cmdList;

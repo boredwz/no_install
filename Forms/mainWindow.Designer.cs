@@ -52,7 +52,6 @@
             this.tableL1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableL3 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.buttonRemoveJunk = new System.Windows.Forms.Button();
             this.buttonSandboxie = new System.Windows.Forms.Button();
             this.tableRGroupCreate = new System.Windows.Forms.GroupBox();
@@ -62,7 +61,10 @@
             this.menuAddons = new System.Windows.Forms.MenuItem();
             this.menuAddonsCollectVSTs = new System.Windows.Forms.MenuItem();
             this.menuAddonsLeftoversCmd = new System.Windows.Forms.MenuItem();
+            this.menuAddonsCustomEcho = new System.Windows.Forms.MenuItem();
             this.menuAbout = new System.Windows.Forms.MenuItem();
+            this.menuAddonsPwshReg = new System.Windows.Forms.MenuItem();
+            this.menuAddonsPlusDir = new System.Windows.Forms.MenuItem();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -352,7 +354,6 @@
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.checkBox1);
             this.panel2.Controls.Add(this.buttonRemoveJunk);
             this.panel2.Controls.Add(this.buttonSandboxie);
             this.panel2.Controls.Add(this.tableRGroupCreate);
@@ -363,16 +364,6 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(197, 493);
             this.panel2.TabIndex = 1;
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(7, 466);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(125, 20);
-            this.checkBox1.TabIndex = 6;
-            this.checkBox1.Text = "Use \'+\' directory";
-            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // buttonRemoveJunk
             // 
@@ -443,7 +434,10 @@
             this.menuAddons.Index = 0;
             this.menuAddons.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuAddonsCollectVSTs,
-            this.menuAddonsLeftoversCmd});
+            this.menuAddonsLeftoversCmd,
+            this.menuAddonsCustomEcho,
+            this.menuAddonsPwshReg,
+            this.menuAddonsPlusDir});
             this.menuAddons.Text = "Addons";
             // 
             // menuAddonsCollectVSTs
@@ -458,11 +452,32 @@
             this.menuAddonsLeftoversCmd.Text = "Remove Leftovers.cmd";
             this.menuAddonsLeftoversCmd.Click += new System.EventHandler(this.menuAddonsLeftoversCmd_Click);
             // 
+            // menuAddonsCustomEcho
+            // 
+            this.menuAddonsCustomEcho.Checked = true;
+            this.menuAddonsCustomEcho.Index = 2;
+            this.menuAddonsCustomEcho.Text = "Enable custom .cmd output";
+            this.menuAddonsCustomEcho.Click += new System.EventHandler(this.menuAddonsCustomEcho_Click);
+            // 
             // menuAbout
             // 
             this.menuAbout.Index = 1;
             this.menuAbout.Text = "About";
             this.menuAbout.Click += new System.EventHandler(this.menuAbout_Click);
+            // 
+            // menuAddonsPwshReg
+            // 
+            this.menuAddonsPwshReg.Checked = true;
+            this.menuAddonsPwshReg.Index = 3;
+            this.menuAddonsPwshReg.Text = "Enable 1.reg powershell edit";
+            this.menuAddonsPwshReg.Click += new System.EventHandler(this.menuAddonsPwshReg_Click);
+            // 
+            // menuAddonsPlusDir
+            // 
+            this.menuAddonsPlusDir.Checked = true;
+            this.menuAddonsPlusDir.Index = 4;
+            this.menuAddonsPlusDir.Text = "Enable \'+\' directory";
+            this.menuAddonsPlusDir.Click += new System.EventHandler(this.menuAddonsPlusDir_Click);
             // 
             // mainWindow
             // 
@@ -481,7 +496,6 @@
             this.tableL1.PerformLayout();
             this.tableL3.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.tableRGroupCreate.ResumeLayout(false);
             this.tableRGroupLinkType.ResumeLayout(false);
             this.tableRGroupLinkType.PerformLayout();
@@ -519,12 +533,14 @@
         private System.Windows.Forms.Button buttonCreate2Reg;
         private System.Windows.Forms.Button buttonSandboxie;
         private System.Windows.Forms.Button buttonRemoveJunk;
-        private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.MainMenu mainMenu1;
         private System.Windows.Forms.MenuItem menuAddons;
         private System.Windows.Forms.MenuItem menuAddonsCollectVSTs;
         private System.Windows.Forms.MenuItem menuAbout;
         private System.Windows.Forms.MenuItem menuAddonsLeftoversCmd;
+        private System.Windows.Forms.MenuItem menuAddonsCustomEcho;
+        private System.Windows.Forms.MenuItem menuAddonsPwshReg;
+        private System.Windows.Forms.MenuItem menuAddonsPlusDir;
     }
 }
 
