@@ -49,56 +49,99 @@ namespace NO_INSTALL
         }
         private void buttonRegexSearch_Click(object sender, EventArgs e)
         {
-            if (textBoxDirectory.Text == "") { return; }
+            string dir = textBoxDirectory.Text;
+            if (dir == "") { return; }
+
             panelRList.Items.Clear();
-            string regexDefault = @"vst3|vstplugins|(?:program(?: files(?: \(x86\))?|data))|common files|roaming|documents";
+            var listDuplicates = new List<string>();
+            string regexDefault = @"vst3|vstplugins|program( files[^\\]{0,6}|data)|common files|roaming|documents";
             string regex = textBoxRegex.Text;
 
-            foreach (string itemFullPath in Directory.EnumerateDirectories(textBoxDirectory.Text, "*", SearchOption.AllDirectories))
+            foreach (string dirPathFull in Directory.EnumerateDirectories(dir + @"\C", "*", SearchOption.AllDirectories))
             {
-                string itemPath = itemFullPath.Substring(textBoxDirectory.Text.Length + 1);
-                string itemName = Regex.Replace(itemPath, @".+\\([^\\]+?)$", @"$1");
+                string dirPath = dirPathFull.Substring(dir.Length + 1);
+                string dirName = Regex.Replace(dirPath, @".+\\([^\\]+?)$", @"$1");
 
                 if (regex == "")
                 {
-                    if (!Regex.IsMatch(itemPath, $"(?:{regexDefault})" + @"\\([^\\]+?)$", RegexOptions.IgnoreCase)) { continue; }
+                    //  Auto-Search
+
+                    //  Deny if not match default regex
+                    if (!Regex.IsMatch(dirPath, $"(?:{regexDefault})" + @"\\([^\\]+?)$", RegexOptions.IgnoreCase)) { continue; }
                 }
                 else
                 {
-                    if (Regex.IsMatch(itemName, @"vst3|vstplugins", RegexOptions.IgnoreCase))
+                    //  Manual regex Search
+
+                    //  Add VST3\* or VstPlugins\* child files into ListView
+                    if (Regex.IsMatch(dirName, @"vst3?", RegexOptions.IgnoreCase))
                     {
-                        foreach (string i in Directory.EnumerateFiles(itemFullPath, "*"))
+                        foreach (string i in Directory.EnumerateFiles(dirPathFull, "*"))
                         {
-                            string iPath = i.Substring(textBoxDirectory.Text.Length + 1);
+                            string iPath = i.Substring(dir.Length + 1);
                             string iName = Regex.Replace(iPath, @".+\\([^\\]+?)$", @"$1");
 
+                            //  Deny if not match regex
                             if (!Regex.IsMatch(iName, regex, RegexOptions.IgnoreCase)) { continue; }
 
+                            //  Add into ListView
+                            if (listDuplicates.Contains(iPath)) { continue; }
+                            listDuplicates.Add(iPath);
                             var ilvi = new ListViewItem(iPath);
                             ilvi.SubItems.Add(File.Exists(i) ? comboBoxFile.Text : comboBoxDir.Text);
                             panelRList.Items.Add(ilvi);
                         }
                     }
-                    if ((!Regex.IsMatch(itemName, regex, RegexOptions.IgnoreCase))
-                    || (Regex.IsMatch(itemPath, $"({regex})" + @".*\\[^\\]*?" + $"({regex})", RegexOptions.IgnoreCase))) { continue; }
+
+                    //  Deny if child item with same regex name
+                    if (Regex.IsMatch(dirPath, $"({regex})" + @".*\\[^\\]*?" + $"({regex})", RegexOptions.IgnoreCase)) { continue; }
+
+                    //  If folder name not match regex, check for child files
+                    if (!Regex.IsMatch(dirName, regex, RegexOptions.IgnoreCase))
+                    {
+                        foreach (string i in Directory.EnumerateFiles(dirPathFull, "*"))
+                        {
+                            string iPath = i.Substring(dir.Length + 1);
+                            string iName = Regex.Replace(iPath, @".+\\([^\\]+?)$", @"$1");
+
+                            //  Deny if not match regex
+                            if (!Regex.IsMatch(iName, regex, RegexOptions.IgnoreCase)) { continue; }
+
+                            //  Add into ListView if not duplicate
+                            if (listDuplicates.Contains(iPath)) { continue; }
+                            listDuplicates.Add(iPath);
+                            var ilvi = new ListViewItem(iPath);
+                            ilvi.SubItems.Add(File.Exists(i) ? comboBoxFile.Text : comboBoxDir.Text);
+                            panelRList.Items.Add(ilvi);
+                        }
+
+                        continue;
+                    }
                 }
 
-                var lvi = new ListViewItem(itemPath);
-                lvi.SubItems.Add(File.Exists(itemFullPath) ? comboBoxFile.Text : comboBoxDir.Text);
-                lvi.Checked = !Regex.IsMatch(itemName, regexDefault, RegexOptions.IgnoreCase);
+                //  Add folder into ListView if not duplicate and default (env) folder
+                if (listDuplicates.Contains(dirPath) || Regex.IsMatch(dirName, regexDefault, RegexOptions.IgnoreCase)) { continue; }
+                listDuplicates.Add(dirPath);
+                var lvi = new ListViewItem(dirPath);
+                lvi.SubItems.Add(File.Exists(dirPathFull) ? comboBoxFile.Text : comboBoxDir.Text);
+                lvi.Checked = !Regex.IsMatch(dirName, regexDefault, RegexOptions.IgnoreCase);
                 panelRList.Items.Add(lvi);
 
-                //      Directory check
-                if (!Directory.Exists(itemFullPath)) { continue; }
+                //  Directory check
+                if (!Directory.Exists(dirPathFull)) { continue; }
 
-                //      Child items check
-                foreach (string i in Directory.EnumerateFileSystemEntries(itemFullPath, "*"))
+                //  Child items check
+                foreach (string i in Directory.EnumerateFileSystemEntries(dirPathFull, "*"))
                 {
-                    string iPath = i.Substring(textBoxDirectory.Text.Length + 1);
+                    string iPath = i.Substring(dir.Length + 1);
                     string iName = Regex.Replace(iPath, @".+\\([^\\]+?)$", @"$1");
 
+                    //  Deny if not match regex
                     if (!Regex.IsMatch(iName, regex, RegexOptions.IgnoreCase)) { continue; }
 
+                    //  Add into ListView if not duplicate
+                    if (listDuplicates.Contains(iPath)) { continue; }
+                    listDuplicates.Add(iPath);
                     var ilvi = new ListViewItem(iPath);
                     ilvi.SubItems.Add(File.Exists(i) ? comboBoxFile.Text : comboBoxDir.Text);
                     panelRList.Items.Add(ilvi);
@@ -221,48 +264,9 @@ namespace NO_INSTALL
             DeleteEmptyDirs(currentDir, regex);
             //FlexibleMessageBox.Show(str);
         }
-        private void menuAddonsLeftoversCmd_Click(object sender, EventArgs e)
-        {
-            string directory = textBoxDirectory.Text;
-            if (directory == "") { return; }
 
-            string parentPath;
-            string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(VST3|VstPlugins|Documents|Windows|system32))?$";
-            var mdDuplicateList = new List<string>();
-            var text = new List<string>
-            {
-                $"::        Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
-                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                "@echo off"
-            };
-
-            foreach (ListViewItem listItem in panelRList.Items)
-            {
-                if (!listItem.Checked) { continue; }
-                string itemPath = EditEnv(listItem.Text);
-                bool isFile = File.Exists(Path.Combine(directory, listItem.Text));
-                string line = isFile ? $"del /f /q \"{itemPath}\"" : $"rd \"{itemPath}\" 2>nul || rd /s /q \"{itemPath}\"";
-                text.Add(line);
-
-                parentPath = Path.GetDirectoryName(itemPath);
-
-                if ((!Regex.IsMatch(parentPath, mdPattern, RegexOptions.IgnoreCase))
-                && (!mdDuplicateList.Contains(parentPath)))
-                {
-                    mdDuplicateList.Add(parentPath);
-                }
-            }
-
-            foreach (string i in mdDuplicateList) { text.Add($"rd \"{i}\""); }
-            text.Add("if exist \"2.reg\" (regedit /s 2.reg)");
-            text.Add("pause");
-            string rlPath = Path.Combine(directory, "Remove Leftovers.cmd");
-            if (File.Exists(rlPath)) { File.Delete(rlPath); }
-            using (var file = new StreamWriter(rlPath, false))
-            {
-                foreach (var line in text) { file.WriteLine(line); }
-            }
-        }
+        
+        // Addons menu
         private void menuAddonsCollectVSTs_Click(object sender, EventArgs e)
         {
             string currentDir = textBoxDirectory.Text;
@@ -305,6 +309,49 @@ namespace NO_INSTALL
                         Directory.Delete(itemPath, true);
                     }
                 }
+            }
+        }
+        private void menuAddonsLeftoversCmd_Click(object sender, EventArgs e)
+        {
+            string directory = textBoxDirectory.Text;
+            if (directory == "") { return; }
+
+            string parentPath;
+            string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(VST3|VstPlugins|Documents|Windows|system32))?$";
+            var mdDuplicateList = new List<string>();
+            var text = new List<string>
+            {
+                $"::        Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
+                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                @"@echo off",
+                @"fsutil dirty query %SYSTEMDRIVE% >nul&if ERRORLEVEL 1 (echo Run as Administrator required&pause&exit)"
+            };
+
+            foreach (ListViewItem listItem in panelRList.Items)
+            {
+                if (!listItem.Checked) { continue; }
+                string itemPath = EditEnv(listItem.Text);
+                bool isFile = File.Exists(Path.Combine(directory, listItem.Text));
+                string line = isFile ? $"del /f /q \"{itemPath}\"" : $"rd \"{itemPath}\" 2>nul || rd /s /q \"{itemPath}\"";
+                text.Add(line);
+
+                parentPath = Path.GetDirectoryName(itemPath);
+
+                if ((!Regex.IsMatch(parentPath, mdPattern, RegexOptions.IgnoreCase))
+                && (!mdDuplicateList.Contains(parentPath)))
+                {
+                    mdDuplicateList.Add(parentPath);
+                }
+            }
+
+            foreach (string i in mdDuplicateList) { text.Add($"rd \"{i}\""); }
+            text.Add("if exist \"2.reg\" (regedit /s 2.reg)");
+            text.Add("pause");
+            string rlPath = Path.Combine(directory, "Remove Leftovers.cmd");
+            if (File.Exists(rlPath)) { File.Delete(rlPath); }
+            using (var file = new StreamWriter(rlPath, false))
+            {
+                foreach (var line in text) { file.WriteLine(line); }
             }
         }
         private void menuAbout_Click(object sender, EventArgs e)
@@ -477,6 +524,7 @@ namespace NO_INSTALL
             catch (UnauthorizedAccessException) { }
         }
 
+        
         // String editing
         private string EditEnv(string var2edit) // Ex. '..\appdata\roaming' --> '%APPDATA%'
         {
@@ -572,6 +620,7 @@ namespace NO_INSTALL
             return cmdList;
         }
 
+        
         // Misc
         private void ControlCenter(Control item) // Snap a control to the center of parent item
         {
