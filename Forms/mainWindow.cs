@@ -173,7 +173,8 @@ namespace NO_INSTALL
         {
             string dir = textBoxDirectory.Text;
             if (dir == "") { return; }
-            if (!Directory.Exists(Path.Combine(dir, @"1.reg"))) { return; }
+
+            if (!File.Exists(Path.Combine(dir, @"1.reg"))) { return; }
             CreateRegUninstall(Path.Combine(dir, @"1.reg"), Path.Combine(dir, @"2.reg"));
         }
         private void buttonSandboxie_Click(object sender, EventArgs e)
