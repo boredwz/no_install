@@ -150,7 +150,7 @@ namespace NO_INSTALL
             if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
             if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
 
-            CreateCmd(directory + @"\SymLink Installer.cmd", GetCmdList(true, reg));
+            CreateCmd(directory + @"\SymLink Installer.cmd", GetCmdList(true, directory, reg));
         }
         private void buttonCreateUninstaller_Click(object sender, EventArgs e)
         {
@@ -161,7 +161,7 @@ namespace NO_INSTALL
             if (checkBox1.Checked) { CreatePlusFolder(directory); reg = @"+\" + reg; }
             if (!File.Exists(Path.Combine(directory, reg))) { reg = @""; }
 
-            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, reg));
+            CreateCmd(textBoxDirectory.Text + @"\SymLink Uninstaller.cmd", GetCmdList(false, directory, reg));
         }
         private void buttonCreate2Reg_Click(object sender, EventArgs e)
         {
@@ -217,16 +217,36 @@ namespace NO_INSTALL
         private void menuAddonsLeftoversCmd_Click(object sender, EventArgs e)
         {
             string directory = textBoxDirectory.Text;
-            var text = new List<string> {"@echo off"};
+            if (directory == "") { return; }
+
+            string parentPath;
+            string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(VST3|VstPlugins|Documents|Windows|system32))?$";
+            var mdDuplicateList = new List<string>();
+            var text = new List<string>
+            {
+                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
+                $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                "@echo off"
+            };
+
             foreach (ListViewItem listItem in panelRList.Items)
             {
                 if (!listItem.Checked) { continue; }
                 string itemPath = EditEnv(listItem.Text);
-
                 bool isFile = File.Exists(Path.Combine(directory, listItem.Text));
                 string line = isFile ? $"del /f /q \"{itemPath}\"" : $"rd \"{itemPath}\" 2>nul || rd /s /q \"{itemPath}\"";
                 text.Add(line);
+
+                parentPath = Path.GetDirectoryName(itemPath);
+
+                if ((!Regex.IsMatch(parentPath, mdPattern, RegexOptions.IgnoreCase))
+                && (!mdDuplicateList.Contains(parentPath)))
+                {
+                    mdDuplicateList.Add(parentPath);
+                }
             }
+
+            foreach (string i in mdDuplicateList) { text.Add($"rd \"{i}\""); }
             text.Add("if exist \"2.reg\" (regedit /s 2.reg)");
             text.Add("pause");
             string rlPath = Path.Combine(directory, "Remove Leftovers.cmd");
@@ -259,7 +279,7 @@ namespace NO_INSTALL
                 string folderPath = Path.Combine(vstPath, folderName);
                 if (!Directory.Exists(vstPath)) { continue; }
                 Directory.CreateDirectory(folderPath);
-                
+
                 foreach (string itemPath in Directory.EnumerateFileSystemEntries(vstPath, @"*"))
                 {
                     string itemName = Regex.Replace(itemPath, @"^.+\\([^\\]+?)$", @"$1");
@@ -275,7 +295,7 @@ namespace NO_INSTALL
                     {
                         if (Directory.Exists(destination) || itemName == folderName) { continue; }
                         CopyDirectory(itemPath, destination, true);
-                        Directory.Delete(itemPath, true );
+                        Directory.Delete(itemPath, true);
                     }
                 }
             }
@@ -473,58 +493,60 @@ namespace NO_INSTALL
             }
             return var2edit;
         }
-        private List<string> GetCmdList(bool installer, string reg) // mklink, md, regedit
+        private List<string> GetCmdList(bool installer, string dir, string reg) // mklink, md, regedit
         {
-            string par;
-            string itemPath;
-            string parentPath;
-            string parentName;
-            string mdPattern = @"program files|common files|programdata|roaming|documents|\%[^\%]+?\%";
-            var list = new List<string>();
-            var list2 = new List<string>();
-            var mdDuplicateList = new List<string>();
+            var mklinkList = new List<string>();
+            var mdListPaths = new List<string>();
+            var mdList = new List<string>();
+            var cmdList = new List<string>();
+            var pwshRegFix = new List<string>
+            {
+                ":: Replace old user Drive letter + Name in 1.reg",
+                ":: powershell \"(gc -LiteralPath '%~dp0+\\1.reg') -replace '(.:)(\\\\\\\\Users\\\\\\\\)[^\\\\]+?\\\\\\\\','%SYSTEMDRIVE%${2}%USERNAME%\\\\'|sc -LiteralPath '%~dp0+\\1.reg'\""
+            };
 
             foreach (ListViewItem listItem in panelRList.Items)
             {
                 if (!listItem.Checked) { continue; }
 
-                if (installer) { par = listItem.SubItems[1].Text == "(default)" ? "" : $"{listItem.SubItems[1].Text} "; }
-                else { par = File.Exists(textBoxDirectory.Text + "\\" + listItem.Text) ? "del /f /q" : "rd"; }
-                itemPath = EditEnv(listItem.Text);
-                parentPath = Path.GetDirectoryName(itemPath);
-                parentName = Regex.Replace(listItem.Text, @".+\\(.+?)\\.+?$", @"$1");
+                string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(VST3|VstPlugins|Documents|Windows|system32))?$";
+                string itemPath = EditEnv(listItem.Text);
+                string parentPath = Path.GetDirectoryName(itemPath);
+                string par = listItem.SubItems[1].Text == "(default)" ? "" : $"{listItem.SubItems[1].Text} ";
+                if (!installer) { par = File.Exists(dir + "\\" + listItem.Text) ? "del /f /q" : "rd"; }
 
-                if ((!Regex.IsMatch(parentName, mdPattern, RegexOptions.IgnoreCase))
-                && (!mdDuplicateList.Contains(parentPath)))
+                //  md / rd
+                if ((!Regex.IsMatch(parentPath, mdPattern, RegexOptions.IgnoreCase))
+                && (!mdListPaths.Contains(parentPath)))
                 {
-                    mdDuplicateList.Add(parentPath);
-                    if (installer)
-                    { list.Add($"md \"{parentPath}\" && echo Folder created: {parentPath}"); }
-                    else
-                    { list2.Add($"rd \"{parentPath}\" && echo Deleted: {parentPath}"); }
+                    mdListPaths.Add(parentPath);
+                    string md = installer ?
+                        $"md \"{parentPath}\" && echo Folder created: {parentPath}" :
+                        $"rd \"{parentPath}\" && echo Deleted: {parentPath}";
+                    mdList.Add(md);
                 }
 
-                if (installer)
-                { list.Add($"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\""); }
-                else
-                { list.Add($"{par} \"{itemPath}\" && echo Deleted: {itemPath}"); }
+                //  mklink / del(rd)
+                string mklinkLine = installer ?
+                    $"mklink {par}\"{itemPath}\" \"%~dp0{listItem.Text}\" >nul && echo SymLinked: {itemPath}" : 
+                    $"{par} \"{itemPath}\" && echo Deleted: {itemPath}";
+                mklinkList.Add(mklinkLine);
             }
 
-            if (!installer) { list.AddRange(list2); }
+            //  md + mklink
+            cmdList.AddRange(installer ? mdList : mklinkList);
+            cmdList.Add("");
+            cmdList.AddRange(installer ? mklinkList : mdList);
+
+            //  +reg
             if (reg != "")
             {
-                list.Add(@"");
-                if (installer)
-                {
-                    list.AddRange(new List<string>
-                    {
-                        @":: Replace old user Drive letter + Name in 1.reg",
-                        ":: powershell \"(gc -LiteralPath '%~dp0+\\1.reg') -replace '(.:)(\\\\\\\\Users\\\\\\\\)[^\\\\]+?\\\\\\\\','%SYSTEMDRIVE%${2}%USERNAME%\\\\'|sc -LiteralPath '%~dp0+\\1.reg'\""
-                    });
-                }
-                list.Add($"regedit /s {reg}");
+                cmdList.Add(@"");
+                if (installer) { cmdList.AddRange(pwshRegFix); }
+                cmdList.Add($"regedit /s {reg}");
             }
-            return list;
+
+            return cmdList;
         }
 
         // Misc
