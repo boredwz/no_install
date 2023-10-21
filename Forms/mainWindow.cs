@@ -15,9 +15,10 @@ namespace NO_INSTALL
         {
             InitializeComponent();
         }
+        string appVersion = Regex.Replace(Application.ProductVersion, @"(\d+\.\d+\.\d+)\.\d+", @"$1");
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.Text = $"NO INSTALL v{ProductVersion.Substring(0, 5)} (by wvzxn)";
+            this.Text = $"NO INSTALL v{appVersion} (by wvzxn)";
             ControlCenter(textBoxDirectory);
             ControlCenter(textBoxRegex);
             comboBoxFile.Text = comboBoxFile.Items[0].ToString();
@@ -224,7 +225,7 @@ namespace NO_INSTALL
             var mdDuplicateList = new List<string>();
             var text = new List<string>
             {
-                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
+                $"::        Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
                 $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
                 "@echo off"
             };
@@ -343,7 +344,7 @@ namespace NO_INSTALL
 
             var text = new List<string>
             {
-                $"::        Generated via NO INSTALL v{ProductVersion.Substring(0, 5)} | https://github.com/wvzxn/no_install",
+                $"::        Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
                 $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
                 @"",
                 @"@echo off",
@@ -555,7 +556,6 @@ namespace NO_INSTALL
             int pad = ((item.Parent.Height / 2) - item.Height) / 2;
             item.Margin = new Padding(item.Margin.Left, pad, item.Margin.Right, pad);
         }
-
     }
 
     class Background
