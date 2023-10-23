@@ -324,7 +324,8 @@ namespace NO_INSTALL
                 $"::        Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
                 $"::        {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
                 @"@echo off",
-                @"fsutil dirty query %SYSTEMDRIVE% >nul&if ERRORLEVEL 1 (echo Run as Administrator required&pause&exit)"
+                @"fsutil dirty query %SYSTEMDRIVE% >nul&if ERRORLEVEL 1 (echo Run as Administrator required&pause&exit)",
+                "cd /d \"%~dp0\""
             };
 
             foreach (ListViewItem listItem in panelRList.Items)
