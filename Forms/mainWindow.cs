@@ -463,7 +463,8 @@ namespace NO_INSTALL
 
             // Check if the source directory exists
             if (!dir.Exists)
-                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+                //throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+                return;
 
             // Cache directories before we start copying
             DirectoryInfo[] dirs = dir.GetDirectories();
