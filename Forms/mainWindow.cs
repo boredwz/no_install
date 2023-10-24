@@ -570,7 +570,7 @@ namespace NO_INSTALL
             var pwshRegFix = new List<string>
             {
                 ":: Replace old user Drive letter + Name in 1.reg",
-                ":: powershell \"(gc -LiteralPath '%~dp0+\\1.reg') -replace '(.:)(\\\\\\\\Users\\\\\\\\)[^\\\\]+?\\\\\\\\','%SYSTEMDRIVE%${2}%USERNAME%\\\\'|sc -LiteralPath '%~dp0+\\1.reg'\""
+                "powershell \"(gc -LiteralPath '%~dp0+\\1.reg') -replace '(.:)(\\\\\\\\Users\\\\\\\\)[^\\\\]+?\\\\\\\\','%SYSTEMDRIVE%${2}%USERNAME%\\\\'|sc -LiteralPath '%~dp0+\\1.reg'\""
             };
 
             foreach (ListViewItem listItem in panelRList.Items)
