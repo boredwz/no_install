@@ -577,7 +577,7 @@ namespace NO_INSTALL
             {
                 if (!listItem.Checked) { continue; }
 
-                string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(VST3|VstPlugins|Documents|Windows|system32))?$";
+                string mdPattern = @"^\%[^\%]+?\%(?:(?:\\.*)?\\(Documents|Windows|system32))?$";
                 string itemPath = EditEnv(listItem.Text);
                 string parentPath = Path.GetDirectoryName(itemPath);
                 string par = listItem.SubItems[1].Text == "(default)" ? "" : $"{listItem.SubItems[1].Text} ";
