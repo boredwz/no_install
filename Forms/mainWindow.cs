@@ -54,7 +54,7 @@ namespace NO_INSTALL
 
             panelRList.Items.Clear();
             var listDuplicates = new List<string>();
-            string regexDefault = @"vst3|vstplugins|program( files[^\\]{0,6}|data)|common files|roaming|documents";
+            string regexDefault = @"vst3|vstplugins|program(?: files(?:.?\(x86\))?|data)|common files|roaming|documents";
             string regex = textBoxRegex.Text;
 
             foreach (string dirPathFull in Directory.EnumerateDirectories(dir + @"\C", "*", SearchOption.AllDirectories))
@@ -438,22 +438,38 @@ namespace NO_INSTALL
         }
         private void CreateRegUninstall(string sourcePath, string destinationPath)
         {
-            List<string> lines2write = new List<string>();
             string[] lines = File.ReadAllLines(sourcePath);
+            List<string> linesNew = new List<string>();
+            bool multiLine = false;
 
             foreach (string line in lines)
             {
-                if (line.StartsWith("[")) { lines2write.Add(line.Replace("[", "[-")); }
+                //  If starts with "*"= or @=
+                if (Regex.IsMatch(line, @"^(\'.*?(?<!\\)\'|@)=".Replace("'","\"")))
+                {
+                    //  When not end with " - multiLine starts
+                    if (!Regex.IsMatch(line, @"(?<!\\)\'$".Replace("'", "\""))) { multiLine = true; }
+                    continue;
+                }
+
+                if (multiLine)
+                {
+                    //  When ends with " - multiLine ends
+                    if (Regex.IsMatch(line, @"(?<!\\)\'$".Replace("'", "\""))) { multiLine = false; }
+                    continue;
+                }
+
+                if (line.StartsWith("[")) { linesNew.Add(line.Replace("[", "[-")); }
                 if (line.StartsWith("windows registry editor", true, null) ||
-                    line.StartsWith("regedit", true, null)) { lines2write.Add(line); lines2write.Add(""); }
-                if (line.StartsWith(";")) { lines2write.Add(line); }
+                    line.StartsWith("regedit", true, null)) { linesNew.Add(line); linesNew.Add(""); }
+                if (line.StartsWith(";")) { linesNew.Add(line); }
             }
 
             CreateBackupFile(destinationPath);
 
             using (var file = new StreamWriter(destinationPath, false))
             {
-                foreach (var line in lines2write) { file.WriteLine(line); }
+                foreach (var line in linesNew) { file.WriteLine(line); }
             }
         }
         private void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
