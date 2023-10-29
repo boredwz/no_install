@@ -267,48 +267,79 @@ namespace NO_INSTALL
 
         
         // Addons menu
-        private void menuAddonsCollectVSTs_Click(object sender, EventArgs e)
+        private void menuAddonsCustomEcho_Click(object sender, EventArgs e)
         {
-            string currentDir = textBoxDirectory.Text;
-            if (currentDir == "") { return; }
+            menuAddonsCustomEcho.Checked = menuAddonsCustomEcho.Checked ? false : true;
+        }
+        private void menuAddonsPwshReg_Click(object sender, EventArgs e)
+        {
+            menuAddonsPwshReg.Checked = menuAddonsPwshReg.Checked ? false : true;
+        }
+        private void menuAddonsPlusDir_Click(object sender, EventArgs e)
+        {
+            menuAddonsPlusDir.Checked = menuAddonsPlusDir.Checked ? false : true;
+        }
+        private void menuAddonsHostsEdit_Click(object sender, EventArgs e)
+        {
+            string directory = textBoxDirectory.Text;
+            if (directory == "") { return; }
 
-            string folderName = "";
-            using (var prompt = new userEnter()) { if (prompt.ShowDialog() == DialogResult.OK) { folderName = prompt.returnValue; } }
-            if (folderName == "") { return; }
-
-            var vstDirList = new List<string>
+            var text = new List<string>
             {
-                @"C\Program Files\Common Files\VST3",
-                @"C\Program Files\VSTPlugins",
-                @"C\Program Files (x86)\Common Files\VST3",
-                @"C\Program Files (x86)\VSTPlugins"
+                $":::       Generated via NO INSTALL v{appVersion} | https://github.com/wvzxn/no_install",
+                $":::       {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                @"::  HostsEdit (CMD)",
+                @"::  ",
+                @"::  [Author]",
+                @"::    wvzxn | https://github.com/wvzxn/",
+                @"::  ",
+                @"::  [Description]",
+                @"::    Edit strings in the Windows hosts file.",
+                @"::    /add - Add ",
+                @"::    /del - Remove",
+                @"::    /q   - Disable output (optionally)",
+                @"::  ",
+                @"::  [Example]",
+                "::    hostsEdit.cmd /add \"1.2.3.4 www.example.com\"",
+                "::    hostsEdit.cmd \"/del\" /q \"1.2.3.4 www.example.com\" \"4.3.2.1 api.example.com\"",
+                @"",
+                @"@echo off",
+                @"fsutil dirty query %SYSTEMDRIVE% >nul&if ERRORLEVEL 1 (echo Run as Administrator required&pause&exit)",
+                @"setlocal EnableDelayedExpansion",
+                @"",
+                "set \"hosts=%WINDIR%\\System32\\drivers\\etc\\hosts\"",
+                "set \"cmnd=$h;$b\"",
+                "if \"%~1\"==\"/add\" (call :add) else (if \"%~1\"==\"/del\" (call :del) else (goto :info))",
+                @"",
+                ":: Edit blockLines [\"1a\" \"2b\" -> '1a','2b'] + Output current action",
+                "for %%Q in (%*) do set \"q=%%~Q\"& if not \"!q:~0,1!\"==\"/\" (set \"lines=!lines!'!q!',\"& if not \"%~2\"==\"/q\" (echo !q! - %echo%))",
+                "set \"blockLines=%lines:~0,-1%\"",
+                @"",
+                "powershell \"$h='%hosts%';$b=%blockLines%;%cmnd%\"",
+                "if not \"%~2\"==\"/q\" (pause)",
+                @"exit",
+                @"",
+                @":add",
+                "set \"echo=Adding to the hosts file...\"",
+                "set \"cmnd=$c=gc $h;$b|%%{if($c -notcontains $_){$c+=$_}};sc $h $c -for\"",
+                @"exit /b",
+                @"",
+                @":del",
+                "set \"echo=Removing from the hosts file...\"",
+                "set \"cmnd=sc $h (gc $h|select-string -patt $b -notm) -for\"",
+                @"exit /b",
+                @"",
+                @":info",
+                "for /f \"usebackq delims=\" %%Q in (`findstr /b /c:\"::  \" \"%~f0\"`) do echo %%Q",
+                @"pause",
+                @"exit"
             };
 
-            foreach (string vstDir in vstDirList)
+            string hostsEditPath = Path.Combine(directory, "HostsEdit.cmd");
+            if (File.Exists(hostsEditPath)) { File.Delete(hostsEditPath); }
+            using (var file = new StreamWriter(hostsEditPath, false))
             {
-                string vstPath = Path.Combine(currentDir, vstDir);
-                string folderPath = Path.Combine(vstPath, folderName);
-                if (!Directory.Exists(vstPath)) { continue; }
-                Directory.CreateDirectory(folderPath);
-
-                foreach (string itemPath in Directory.EnumerateFileSystemEntries(vstPath, @"*"))
-                {
-                    string itemName = Regex.Replace(itemPath, @"^.+\\([^\\]+?)$", @"$1");
-                    string destination = Path.Combine(folderPath, itemName);
-
-                    if (File.Exists(itemPath))
-                    {
-                        if (File.Exists(destination)) { continue; }
-                        File.Copy(itemPath, destination);
-                        File.Delete(itemPath);
-                    }
-                    else
-                    {
-                        if (Directory.Exists(destination) || itemName == folderName) { continue; }
-                        CopyDirectory(itemPath, destination, true);
-                        Directory.Delete(itemPath, true);
-                    }
-                }
+                foreach (var line in text) { file.WriteLine(line); }
             }
         }
         private void menuAddonsLeftoversCmd_Click(object sender, EventArgs e)
@@ -355,22 +386,54 @@ namespace NO_INSTALL
                 foreach (var line in text) { file.WriteLine(line); }
             }
         }
+        private void menuAddonsCollectVSTs_Click(object sender, EventArgs e)
+        {
+            string currentDir = textBoxDirectory.Text;
+            if (currentDir == "") { return; }
+
+            string folderName = "";
+            using (var prompt = new userEnter()) { if (prompt.ShowDialog() == DialogResult.OK) { folderName = prompt.returnValue; } }
+            if (folderName == "") { return; }
+
+            var vstDirList = new List<string>
+            {
+                @"C\Program Files\Common Files\VST3",
+                @"C\Program Files\VSTPlugins",
+                @"C\Program Files (x86)\Common Files\VST3",
+                @"C\Program Files (x86)\VSTPlugins"
+            };
+
+            foreach (string vstDir in vstDirList)
+            {
+                string vstPath = Path.Combine(currentDir, vstDir);
+                string folderPath = Path.Combine(vstPath, folderName);
+                if (!Directory.Exists(vstPath)) { continue; }
+                Directory.CreateDirectory(folderPath);
+
+                foreach (string itemPath in Directory.EnumerateFileSystemEntries(vstPath, @"*"))
+                {
+                    string itemName = Regex.Replace(itemPath, @"^.+\\([^\\]+?)$", @"$1");
+                    string destination = Path.Combine(folderPath, itemName);
+
+                    if (File.Exists(itemPath))
+                    {
+                        if (File.Exists(destination)) { continue; }
+                        File.Copy(itemPath, destination);
+                        File.Delete(itemPath);
+                    }
+                    else
+                    {
+                        if (Directory.Exists(destination) || itemName == folderName) { continue; }
+                        CopyDirectory(itemPath, destination, true);
+                        Directory.Delete(itemPath, true);
+                    }
+                }
+            }
+        }
         private void menuAbout_Click(object sender, EventArgs e)
         {
             var aboutForm = new about();
             aboutForm.ShowDialog();
-        }
-        private void menuAddonsCustomEcho_Click(object sender, EventArgs e)
-        {
-            menuAddonsCustomEcho.Checked = menuAddonsCustomEcho.Checked ? false : true;
-        }
-        private void menuAddonsPwshReg_Click(object sender, EventArgs e)
-        {
-            menuAddonsPwshReg.Checked = menuAddonsPwshReg.Checked ? false : true;
-        }
-        private void menuAddonsPlusDir_Click(object sender, EventArgs e)
-        {
-            menuAddonsPlusDir.Checked = menuAddonsPlusDir.Checked ? false : true;
         }
 
 
@@ -644,6 +707,7 @@ namespace NO_INSTALL
             int pad = ((item.Parent.Height / 2) - item.Height) / 2;
             item.Margin = new Padding(item.Margin.Left, pad, item.Margin.Right, pad);
         }
+
     }
 
     class Background

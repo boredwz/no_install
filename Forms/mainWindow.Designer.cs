@@ -59,12 +59,13 @@
             this.tableRGroupLinkType = new System.Windows.Forms.GroupBox();
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuAddons = new System.Windows.Forms.MenuItem();
-            this.menuAddonsCollectVSTs = new System.Windows.Forms.MenuItem();
-            this.menuAddonsLeftoversCmd = new System.Windows.Forms.MenuItem();
             this.menuAddonsCustomEcho = new System.Windows.Forms.MenuItem();
-            this.menuAbout = new System.Windows.Forms.MenuItem();
             this.menuAddonsPwshReg = new System.Windows.Forms.MenuItem();
             this.menuAddonsPlusDir = new System.Windows.Forms.MenuItem();
+            this.menuAddonsHostsEdit = new System.Windows.Forms.MenuItem();
+            this.menuAddonsLeftoversCmd = new System.Windows.Forms.MenuItem();
+            this.menuAddonsCollectVSTs = new System.Windows.Forms.MenuItem();
+            this.menuAbout = new System.Windows.Forms.MenuItem();
             this.tableBack.SuspendLayout();
             this.tableL.SuspendLayout();
             this.tableL1.SuspendLayout();
@@ -433,51 +434,58 @@
             // 
             this.menuAddons.Index = 0;
             this.menuAddons.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuAddonsCollectVSTs,
-            this.menuAddonsLeftoversCmd,
             this.menuAddonsCustomEcho,
             this.menuAddonsPwshReg,
-            this.menuAddonsPlusDir});
+            this.menuAddonsPlusDir,
+            this.menuAddonsHostsEdit,
+            this.menuAddonsLeftoversCmd,
+            this.menuAddonsCollectVSTs});
             this.menuAddons.Text = "Addons";
-            // 
-            // menuAddonsCollectVSTs
-            // 
-            this.menuAddonsCollectVSTs.Index = 0;
-            this.menuAddonsCollectVSTs.Text = "Collect VSTs in a folder";
-            this.menuAddonsCollectVSTs.Click += new System.EventHandler(this.menuAddonsCollectVSTs_Click);
-            // 
-            // menuAddonsLeftoversCmd
-            // 
-            this.menuAddonsLeftoversCmd.Index = 1;
-            this.menuAddonsLeftoversCmd.Text = "Remove Leftovers.cmd";
-            this.menuAddonsLeftoversCmd.Click += new System.EventHandler(this.menuAddonsLeftoversCmd_Click);
             // 
             // menuAddonsCustomEcho
             // 
             this.menuAddonsCustomEcho.Checked = true;
-            this.menuAddonsCustomEcho.Index = 2;
+            this.menuAddonsCustomEcho.Index = 0;
             this.menuAddonsCustomEcho.Text = "Enable custom .cmd output";
             this.menuAddonsCustomEcho.Click += new System.EventHandler(this.menuAddonsCustomEcho_Click);
-            // 
-            // menuAbout
-            // 
-            this.menuAbout.Index = 1;
-            this.menuAbout.Text = "About";
-            this.menuAbout.Click += new System.EventHandler(this.menuAbout_Click);
             // 
             // menuAddonsPwshReg
             // 
             this.menuAddonsPwshReg.Checked = true;
-            this.menuAddonsPwshReg.Index = 3;
+            this.menuAddonsPwshReg.Index = 1;
             this.menuAddonsPwshReg.Text = "Enable 1.reg powershell edit";
             this.menuAddonsPwshReg.Click += new System.EventHandler(this.menuAddonsPwshReg_Click);
             // 
             // menuAddonsPlusDir
             // 
             this.menuAddonsPlusDir.Checked = true;
-            this.menuAddonsPlusDir.Index = 4;
+            this.menuAddonsPlusDir.Index = 2;
             this.menuAddonsPlusDir.Text = "Enable \'+\' directory";
             this.menuAddonsPlusDir.Click += new System.EventHandler(this.menuAddonsPlusDir_Click);
+            // 
+            // menuAddonsHostsEdit
+            // 
+            this.menuAddonsHostsEdit.Index = 3;
+            this.menuAddonsHostsEdit.Text = "HostsEdit.cmd";
+            this.menuAddonsHostsEdit.Click += new System.EventHandler(this.menuAddonsHostsEdit_Click);
+            // 
+            // menuAddonsLeftoversCmd
+            // 
+            this.menuAddonsLeftoversCmd.Index = 4;
+            this.menuAddonsLeftoversCmd.Text = "Remove Leftovers.cmd";
+            this.menuAddonsLeftoversCmd.Click += new System.EventHandler(this.menuAddonsLeftoversCmd_Click);
+            // 
+            // menuAddonsCollectVSTs
+            // 
+            this.menuAddonsCollectVSTs.Index = 5;
+            this.menuAddonsCollectVSTs.Text = "Collect VSTs in a folder";
+            this.menuAddonsCollectVSTs.Click += new System.EventHandler(this.menuAddonsCollectVSTs_Click);
+            // 
+            // menuAbout
+            // 
+            this.menuAbout.Index = 1;
+            this.menuAbout.Text = "About";
+            this.menuAbout.Click += new System.EventHandler(this.menuAbout_Click);
             // 
             // mainWindow
             // 
@@ -541,6 +549,7 @@
         private System.Windows.Forms.MenuItem menuAddonsCustomEcho;
         private System.Windows.Forms.MenuItem menuAddonsPwshReg;
         private System.Windows.Forms.MenuItem menuAddonsPlusDir;
+        private System.Windows.Forms.MenuItem menuAddonsHostsEdit;
     }
 }
 
